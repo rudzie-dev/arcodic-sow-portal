@@ -412,6 +412,7 @@ export default function App() {
           min-height: 100vh; display: flex; flex-direction: column;
           align-items: center; justify-content: center;
           background: #0a0906; position: relative; overflow: hidden; padding: 40px;
+          width: 100%;
         }
         .w-grid {
           position: absolute; inset: 0;
@@ -424,7 +425,7 @@ export default function App() {
           background: radial-gradient(circle, rgba(201,169,110,0.06) 0%, transparent 70%);
           pointer-events: none;
         }
-        .w-content { position: relative; z-index: 1; text-align: center; max-width: 540px; margin: 0 auto; }
+        .w-content { position: relative; z-index: 1; text-align: center; max-width: 540px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; align-items: center; }
         .w-badge {
           display: inline-flex; align-items: center; gap: 8px;
           border: 1px solid rgba(201,169,110,0.2); padding: 6px 16px; margin-bottom: 40px;
