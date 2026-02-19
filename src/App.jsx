@@ -226,6 +226,7 @@ export default function App() {
   });
 
   const [welcomed, setWelcomed] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [scrolled, setScrolled] = useState(false);
   const [arcSig, setArcSig] = useState('');
   const [sending, setSending] = useState(false);
@@ -313,7 +314,6 @@ export default function App() {
   const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
   // ── WELCOME SCREEN ──
-  const [selectedUser, setSelectedUser] = useState(null);
   const USERS = {
     rudz: {
       name: 'Rudz',
