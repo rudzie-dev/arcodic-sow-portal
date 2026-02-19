@@ -11,7 +11,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
-  const { data, arcod_signature, client_email, client_name } = req.body;
+const { data, arcodic_signature, client_email, client_name } = req.body;
 
   try {
     // 1. Save SOW to Supabase
