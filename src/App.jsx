@@ -240,6 +240,7 @@ export default function App() {
   const [exitDir, setExitDir] = useState('left');
   const [enterDir, setEnterDir] = useState('right');
   const [showPw, setShowPw] = useState(false);
+  const [pwFocused, setPwFocused] = useState(false);
 
   const sendToClient = async () => {
     if (!arcSig.trim()) { setSendError('Please sign as ARCODIC first.'); return; }
@@ -318,10 +319,8 @@ export default function App() {
   });
 
   const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-
   // ── WELCOME SCREEN ──
-
-  const profiles = [
+  const PROFILES = [
     {
       id: 'rudz',
       name: 'Rudz',
@@ -350,36 +349,39 @@ export default function App() {
     },
   ];
 
-  const goTo = (dir) => {
+  const PROFILE_COUNT = PROFILES.length;
+
+  const handleGoTo = (dir) => {
     setExitDir(dir);
     setEnterDir(dir === 'left' ? 'right' : 'left');
     setExiting(true);
     setTimeout(() => {
-      setActiveProfile(i => (i + (dir === 'left' ? -1 : 1) + profiles.length) % profiles.length);
+      setActiveProfile(prev => (prev + (dir === 'left' ? -1 : 1) + PROFILE_COUNT) % PROFILE_COUNT);
       setPassword('');
       setPwError('');
       setExiting(false);
-    }, 280);
+    }, 300);
   };
 
-  useEffect(() => {
-    if (welcomed) return;
-    const timer = setInterval(() => goTo('right'), 5000);
-    return () => clearInterval(timer);
-  }, [welcomed, activeProfile]);
-
   const handleLogin = () => {
-    const p = profiles[activeProfile];
+    const p = PROFILES[activeProfile];
     if (password === p.password) {
       setWelcomed(true);
     } else {
       setPwError('Wrong password. Try harder.');
-      setTimeout(() => setPwError(''), 2000);
+      setTimeout(() => setPwError(''), 2200);
     }
   };
 
+  // Auto-rotate — pauses when user is typing
+  useEffect(() => {
+    if (welcomed || pwFocused) return;
+    const t = setInterval(() => handleGoTo('right'), 5000);
+    return () => clearInterval(t);
+  }, [welcomed, pwFocused, activeProfile]);
+
   if (!welcomed) {
-    const p = profiles[activeProfile];
+    const p = PROFILES[activeProfile];
     return (
     <>
       <style>{`
@@ -388,237 +390,214 @@ export default function App() {
         html, body, #root { width: 100%; height: 100%; margin: 0; padding: 0; }
         body { background: #080705; font-family: 'DM Mono', monospace; -webkit-font-smoothing: antialiased; }
 
-        @keyframes fadeUp   { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes pulse    { 0%,100%{opacity:1} 50%{opacity:0.25} }
-        @keyframes shake    { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-6px)} 40%,80%{transform:translateX(6px)} }
+        @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:0.25} }
+        @keyframes shake  { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-5px)} 40%,80%{transform:translateX(5px)} }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
 
-        @keyframes enter-right { from{opacity:0;transform:translateX(40px)} to{opacity:1;transform:translateX(0)} }
-        @keyframes enter-left  { from{opacity:0;transform:translateX(-40px)} to{opacity:1;transform:translateX(0)} }
-        @keyframes exit-left   { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(-40px)} }
-        @keyframes exit-right  { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(40px)} }
+        @keyframes slide-in-right  { from{opacity:0;transform:translateX(48px)}  to{opacity:1;transform:translateX(0)} }
+        @keyframes slide-in-left   { from{opacity:0;transform:translateX(-48px)} to{opacity:1;transform:translateX(0)} }
+        @keyframes slide-out-left  { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(-48px)} }
+        @keyframes slide-out-right { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(48px)} }
 
-        @keyframes img-enter-right { from{opacity:0;transform:scale(1.04) translateX(20px)} to{opacity:1;transform:scale(1) translateX(0)} }
-        @keyframes img-enter-left  { from{opacity:0;transform:scale(1.04) translateX(-20px)} to{opacity:1;transform:scale(1) translateX(0)} }
-        @keyframes img-exit-left   { from{opacity:1;transform:scale(1) translateX(0)} to{opacity:0;transform:scale(0.97) translateX(-20px)} }
-        @keyframes img-exit-right  { from{opacity:1;transform:scale(1) translateX(0)} to{opacity:0;transform:scale(0.97) translateX(20px)} }
+        @keyframes img-in-right  { from{opacity:0;transform:scale(1.06) translateX(32px)} to{opacity:1;transform:scale(1) translateX(0)} }
+        @keyframes img-in-left   { from{opacity:0;transform:scale(1.06) translateX(-32px)} to{opacity:1;transform:scale(1) translateX(0)} }
+        @keyframes img-out-left  { from{opacity:1;transform:scale(1)} to{opacity:0;transform:scale(0.96) translateX(-24px)} }
+        @keyframes img-out-right { from{opacity:1;transform:scale(1)} to{opacity:0;transform:scale(0.96) translateX(24px)} }
 
         .wp-root {
           width: 100vw; height: 100vh;
-          display: grid; grid-template-columns: 1fr 1fr;
-          overflow: hidden; position: relative;
+          display: grid; grid-template-columns: 55% 45%;
+          overflow: hidden; background: #080705;
         }
 
-        /* ── LEFT: IMAGE SIDE ── */
-        .wp-image-side {
-          position: relative; overflow: hidden;
-        }
-        .wp-image {
-          width: 100%; height: 100%;
-          background-size: cover; background-position: center top;
-          transition: none;
-        }
-        .wp-image.enter-right { animation: img-enter-right 0.5s cubic-bezier(0.25,0.46,0.45,0.94) both; }
-        .wp-image.enter-left  { animation: img-enter-left  0.5s cubic-bezier(0.25,0.46,0.45,0.94) both; }
-        .wp-image.exit-left   { animation: img-exit-left   0.28s ease both; }
-        .wp-image.exit-right  { animation: img-exit-right  0.28s ease both; }
-
-        .wp-image-overlay {
+        /* IMAGE SIDE */
+        .wp-left { position: relative; overflow: hidden; }
+        .wp-img {
           position: absolute; inset: 0;
-          background: linear-gradient(to right, transparent 60%, #080705 100%),
-                      linear-gradient(to top, rgba(8,7,5,0.6) 0%, transparent 40%);
+          background-size: cover; background-position: center top;
         }
-        .wp-image-name {
-          position: absolute; bottom: 48px; left: 40px;
-          font-family: 'Cormorant Garamond', serif;
-          font-size: 56px; font-weight: 700;
-          color: #f0e8d8; line-height: 1;
-          text-shadow: 0 2px 40px rgba(0,0,0,0.8);
+        .wp-img.in-right  { animation: img-in-right  0.55s cubic-bezier(0.22,1,0.36,1) both; }
+        .wp-img.in-left   { animation: img-in-left   0.55s cubic-bezier(0.22,1,0.36,1) both; }
+        .wp-img.out-left  { animation: img-out-left  0.3s ease both; }
+        .wp-img.out-right { animation: img-out-right 0.3s ease both; }
+
+        .wp-img-overlay {
+          position: absolute; inset: 0;
+          background:
+            linear-gradient(to right, rgba(8,7,5,0) 40%, #080705 100%),
+            linear-gradient(to top, rgba(8,7,5,0.75) 0%, transparent 45%);
         }
-        .wp-image-badge {
-          position: absolute; bottom: 40px; left: 42px; top: auto;
-          margin-top: 8px;
+        .wp-name-wrap {
+          position: absolute; bottom: 44px; left: 40px;
         }
-        .wp-image-name-wrap {
-          position: absolute; bottom: 40px; left: 40px;
-        }
+        .wp-name-wrap.in-right  { animation: slide-in-right  0.5s 0.1s cubic-bezier(0.22,1,0.36,1) both; }
+        .wp-name-wrap.in-left   { animation: slide-in-left   0.5s 0.1s cubic-bezier(0.22,1,0.36,1) both; }
+        .wp-name-wrap.out-left  { animation: slide-out-left  0.3s ease both; }
+        .wp-name-wrap.out-right { animation: slide-out-right 0.3s ease both; }
         .wp-big-name {
-          font-family: 'Cormorant Garamond', serif;
-          font-size: 64px; font-weight: 700;
-          color: #f0e8d8; line-height: 1; display: block;
-          text-shadow: 0 4px 40px rgba(0,0,0,0.9);
+          display: block;
+          font-family: 'Cormorant Garamond', serif; font-size: 72px; font-weight: 700;
+          color: #f0e8d8; line-height: 1;
+          text-shadow: 0 4px 48px rgba(0,0,0,0.9);
         }
         .wp-big-badge {
-          font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
-          color: rgba(212,197,168,0.5); margin-top: 6px; display: block;
+          display: block; margin-top: 6px;
+          font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+          color: rgba(212,197,168,0.4);
         }
 
-        /* ── RIGHT: CONTENT SIDE ── */
-        .wp-content-side {
-          position: relative;
-          background: #080705;
-          display: flex; flex-direction: column; justify-content: center;
-          padding: 64px 56px;
-          overflow: hidden;
+        /* ARROW OVERLAYS on left */
+        .wp-left-arrows {
+          position: absolute; bottom: 44px; right: 24px;
+          display: flex; flex-direction: column; gap: 8px; z-index: 10;
         }
-        .wp-grid {
+
+        /* RIGHT SIDE */
+        .wp-right {
+          position: relative; overflow: hidden;
+          display: flex; flex-direction: column; justify-content: center;
+          padding: 56px 52px;
+        }
+        .wp-right-grid {
           position: absolute; inset: 0; pointer-events: none;
           background-image:
-            linear-gradient(rgba(201,169,110,0.025) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(201,169,110,0.025) 1px, transparent 1px);
-          background-size: 48px 48px;
+            linear-gradient(rgba(201,169,110,0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(201,169,110,0.02) 1px, transparent 1px);
+          background-size: 44px 44px;
         }
-        .wp-glow {
-          position: absolute; width: 500px; height: 500px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(201,169,110,0.04) 0%, transparent 70%);
-          pointer-events: none; top: 50%; right: -100px; transform: translateY(-50%);
+        .wp-right-glow {
+          position: absolute; inset: 0; pointer-events: none;
+          background: radial-gradient(ellipse at 80% 40%, rgba(201,169,110,0.04) 0%, transparent 60%);
         }
 
-        .wp-badge {
-          display: inline-flex; align-items: center; gap: 8px;
-          border: 1px solid rgba(201,169,110,0.15); padding: 5px 14px;
-          margin-bottom: 48px; font-size: 9px; letter-spacing: 0.2em;
-          text-transform: uppercase; color: #5a4a30; width: fit-content;
+        .wp-top-bar {
+          position: absolute; top: 32px; left: 52px; right: 52px;
+          display: flex; align-items: center; justify-content: space-between;
           animation: fadeUp 0.4s ease both;
         }
-        .wp-dot { width:5px; height:5px; border-radius:50%; background:#c9a96e; animation:pulse 2s infinite; flex-shrink:0; }
-
-        .wp-logo {
-          font-family: 'Cormorant Garamond', serif; font-size: 13px; font-weight: 400;
-          color: #4a4035; letter-spacing: 0.3em; text-transform: uppercase;
-          margin-bottom: 64px; animation: fadeUp 0.4s 0.05s ease both;
+        .wp-brand {
+          font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 700;
+          color: #3a3028; letter-spacing: 0.06em;
         }
+        .wp-live {
+          display: flex; align-items: center; gap: 6px;
+          font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: #3a3028;
+        }
+        .wp-live-dot { width:5px; height:5px; border-radius:50%; background:#c9a96e; animation:pulse 2s infinite; }
 
-        /* ── CARD ── */
+        /* CARD */
         .wp-card { position: relative; z-index: 1; }
-        .wp-card.enter-right { animation: enter-right 0.4s cubic-bezier(0.25,0.46,0.45,0.94) both; }
-        .wp-card.enter-left  { animation: enter-left  0.4s cubic-bezier(0.25,0.46,0.45,0.94) both; }
-        .wp-card.exit-left   { animation: exit-left   0.28s ease both; }
-        .wp-card.exit-right  { animation: exit-right  0.28s ease both; }
+        .wp-card.in-right  { animation: slide-in-right  0.45s cubic-bezier(0.22,1,0.36,1) both; }
+        .wp-card.in-left   { animation: slide-in-left   0.45s cubic-bezier(0.22,1,0.36,1) both; }
+        .wp-card.out-left  { animation: slide-out-left  0.3s ease both; }
+        .wp-card.out-right { animation: slide-out-right 0.3s ease both; }
 
-        .wp-greeting {
-          font-family: 'Cormorant Garamond', serif; font-size: 14px; font-weight: 400;
-          color: #6b5a40; letter-spacing: 0.12em; text-transform: uppercase;
-          margin-bottom: 4px;
+        .wp-greeting-label {
+          font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+          color: #4a3a28; margin-bottom: 6px;
         }
-        .wp-greeting-name {
-          font-family: 'Cormorant Garamond', serif; font-size: 52px; font-weight: 700;
-          line-height: 1; display: block; margin-bottom: 24px;
+        .wp-heading {
+          font-family: 'Cormorant Garamond', serif; font-size: 56px; font-weight: 700;
+          line-height: 1; margin-bottom: 20px;
         }
-        .wp-greeting-name.gold { color: #c9a96e; }
-        .wp-greeting-name.teal { color: #4a8a7a; }
+        .wp-heading.gold { color: #c9a96e; }
+        .wp-heading.teal { color: #4a8a7a; }
 
         .wp-sub  { font-size: 12px; color: #5a5040; line-height: 1.9; margin-bottom: 6px; }
-        .wp-joke { font-size: 11px; color: #3a2e20; font-style: italic; margin-bottom: 0; }
+        .wp-joke { font-size: 11px; color: #3a2e20; font-style: italic; }
 
-        .wp-divider {
-          width: 32px; height: 1px;
-          background: linear-gradient(to right, #2a2520, transparent);
-          margin: 28px 0;
-        }
+        .wp-divider { width: 28px; height: 1px; background: #252018; margin: 28px 0; }
 
-        /* ── PASSWORD ── */
-        .wp-pw-label {
-          font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
-          color: #4a3a28; margin-bottom: 10px;
+        /* PASSWORD */
+        .wp-pw-label { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #3a3028; margin-bottom: 10px; }
+        .wp-pw-row {
+          display: flex; align-items: center;
+          border-bottom: 1px solid #252018; margin-bottom: 6px; transition: border-color 0.2s;
         }
-        .wp-pw-wrap {
-          display: flex; align-items: center; gap: 0;
-          border-bottom: 1px solid #2a2520; margin-bottom: 8px;
-          transition: border-color 0.2s;
-        }
-        .wp-pw-wrap:focus-within { border-color: #c9a96e; }
-        .wp-pw-wrap.teal:focus-within { border-color: #4a8a7a; }
+        .wp-pw-row.focused-gold { border-color: #c9a96e; }
+        .wp-pw-row.focused-teal { border-color: #4a8a7a; }
         .wp-pw-input {
           flex: 1; background: transparent; border: none; outline: none;
-          color: #d4c5a8; font-family: 'DM Mono', monospace; font-size: 16px;
-          padding: 8px 0; letter-spacing: 0.1em;
+          color: #d4c5a8; font-family: 'DM Mono', monospace;
+          font-size: 18px; padding: 10px 0; letter-spacing: 0.12em;
         }
         .wp-pw-toggle {
           background: none; border: none; cursor: pointer;
-          color: #4a3a28; font-size: 10px; padding: 8px 4px;
-          letter-spacing: 0.08em; text-transform: uppercase; transition: color 0.2s;
+          font-family: 'DM Mono', monospace;
+          font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+          color: #3a3028; padding: 10px 0 10px 12px; transition: color 0.2s;
         }
         .wp-pw-toggle:hover { color: #8a7250; }
-        .wp-pw-error {
-          font-size: 10px; color: #c0614a; height: 16px; margin-bottom: 24px;
-          letter-spacing: 0.05em;
-          animation: shake 0.4s ease;
-        }
-        .wp-pw-ok { margin-bottom: 24px; }
+        .wp-pw-error { font-size: 10px; color: #c0614a; min-height: 18px; margin-bottom: 20px; letter-spacing: 0.04em; }
+        .wp-pw-error.shake { animation: shake 0.4s ease; }
+        .wp-pw-spacer { height: 38px; margin-bottom: 20px; }
 
         .wp-btn {
-          border: none; padding: 15px 40px; cursor: pointer;
+          border: none; padding: 16px 40px; cursor: pointer;
           font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500;
-          letter-spacing: 0.18em; text-transform: uppercase; transition: all 0.2s;
-          display: inline-flex; align-items: center; gap: 10px;
+          letter-spacing: 0.18em; text-transform: uppercase;
+          transition: all 0.2s; display: inline-flex; align-items: center; gap: 12px;
         }
-        .wp-btn.gold  { background: #c9a96e; color: #080705; }
-        .wp-btn.gold:hover  { background: #ddb97e; transform: translateX(4px); }
-        .wp-btn.teal  { background: #4a8a7a; color: #080705; }
-        .wp-btn.teal:hover  { background: #5aaa9a; transform: translateX(4px); }
-        .wp-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+        .wp-btn.gold { background: #c9a96e; color: #080705; }
+        .wp-btn.gold:hover { background: #ddb97e; transform: translateX(6px); }
+        .wp-btn.teal { background: #4a8a7a; color: #080705; }
+        .wp-btn.teal:hover { background: #5aaa9a; transform: translateX(6px); }
+        .wp-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; }
 
-        /* ── NAV ── */
-        .wp-nav {
-          position: absolute; bottom: 48px; right: 56px;
-          display: flex; align-items: center; gap: 8px;
+        /* BOTTOM BAR */
+        .wp-bottom {
+          position: absolute; bottom: 32px; left: 52px; right: 52px;
+          display: flex; align-items: center; justify-content: space-between;
         }
-        .wp-arrow {
-          width: 40px; height: 40px; background: transparent;
-          border: 1px solid #2a2520; color: #6b5a40; cursor: pointer;
-          font-size: 14px; transition: all 0.2s;
+        .wp-dots { display: flex; gap: 8px; align-items: center; }
+        .wp-dot-pip {
+          height: 2px; background: #252018; transition: all 0.35s cubic-bezier(0.22,1,0.36,1);
+          width: 18px; cursor: pointer;
+        }
+        .wp-dot-pip.active { background: #c9a96e; width: 30px; }
+        .wp-arrows { display: flex; gap: 8px; }
+        .wp-arrow-btn {
+          width: 38px; height: 38px; background: transparent;
+          border: 1px solid #252018; color: #5a4a38; cursor: pointer;
+          font-size: 13px; transition: all 0.2s;
           display: flex; align-items: center; justify-content: center;
+          font-family: 'DM Mono', monospace;
         }
-        .wp-arrow:hover { border-color: #c9a96e; color: #c9a96e; }
-
-        /* ── DOTS ── */
-        .wp-dots {
-          position: absolute; bottom: 56px; left: 56px;
-          display: flex; gap: 8px;
-        }
-        .wp-dot-ind {
-          width: 20px; height: 2px; background: #2a2520; transition: all 0.3s;
-        }
-        .wp-dot-ind.active { background: #c9a96e; width: 32px; }
-
-        .wp-footer {
-          position: absolute; top: 32px; left: 40px;
-          font-size: 9px; color: #2a2218; letter-spacing: 0.15em; text-transform: uppercase;
-        }
+        .wp-arrow-btn:hover { border-color: #c9a96e; color: #c9a96e; }
       `}</style>
+
       <div className="wp-root">
-        {/* LEFT — photo */}
-        <div className="wp-image-side">
+        {/* ── LEFT: PHOTO ── */}
+        <div className="wp-left">
           <div
-            className={`wp-image ${exiting ? `exit-${exitDir}` : `enter-${enterDir}`}`}
+            className={`wp-img ${exiting ? `out-${exitDir}` : `in-${enterDir}`}`}
             style={{ backgroundImage: `url(${p.image})` }}
           />
-          <div className="wp-image-overlay" />
-          <div className="wp-image-name-wrap">
+          <div className="wp-img-overlay" />
+          <div className={`wp-name-wrap ${exiting ? `out-${exitDir}` : `in-${enterDir}`}`}>
             <span className="wp-big-name">{p.name}</span>
             <span className="wp-big-badge">{p.badge}</span>
           </div>
         </div>
 
-        {/* RIGHT — content */}
-        <div className="wp-content-side">
-          <div className="wp-grid" />
-          <div className="wp-glow" />
-          <div className="wp-badge"><div className="wp-dot" />SOW Portal · Internal Access</div>
-          <div className="wp-logo">Arcodic</div>
+        {/* ── RIGHT: CONTENT ── */}
+        <div className="wp-right">
+          <div className="wp-right-grid" />
+          <div className="wp-right-glow" />
 
-          <div className={`wp-card ${exiting ? `exit-${exitDir}` : `enter-${enterDir}`}`}>
-            <div className="wp-greeting">
-              {p.greeting}
-            </div>
-            <span className={`wp-greeting-name ${p.nameStyle}`}>{p.name}.</span>
+          <div className="wp-top-bar">
+            <div className="wp-brand">Arcodic</div>
+            <div className="wp-live"><div className="wp-live-dot" />SOW Portal</div>
+          </div>
+
+          <div className={`wp-card ${exiting ? `out-${exitDir}` : `in-${enterDir}`}`}>
+            <div className="wp-greeting-label">{p.greeting}</div>
+            <div className={`wp-heading ${p.nameStyle}`}>{p.name}.</div>
             <p className="wp-sub">{p.sub}</p>
             {p.joke && <p className="wp-joke">{p.joke}</p>}
-
             <div className="wp-divider" />
-
             <div className="wp-pw-label">Password</div>
-            <div className={`wp-pw-wrap ${p.nameStyle}`}>
+            <div className={`wp-pw-row ${pwFocused ? `focused-${p.nameStyle}` : ''}`}>
               <input
                 className="wp-pw-input"
                 type={showPw ? 'text' : 'password'}
@@ -626,45 +605,44 @@ export default function App() {
                 value={password}
                 onChange={e => { setPassword(e.target.value); setPwError(''); }}
                 onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                autoFocus
+                onFocus={() => setPwFocused(true)}
+                onBlur={() => setPwFocused(false)}
               />
-              <button className="wp-pw-toggle" onClick={() => setShowPw(s => !s)}>
+              <button className="wp-pw-toggle" onMouseDown={e => e.preventDefault()} onClick={() => setShowPw(s => !s)}>
                 {showPw ? 'hide' : 'show'}
               </button>
             </div>
-            <div className={`wp-pw-error ${pwError ? '' : 'wp-pw-ok'}`}>
-              {pwError}
-            </div>
-
+            {pwError
+              ? <div className="wp-pw-error shake">{pwError}</div>
+              : <div className="wp-pw-spacer" />
+            }
             <button
               className={`wp-btn ${p.btnClass}`}
               onClick={handleLogin}
               disabled={!password.trim()}
-            >
-              {p.btnText} →
-            </button>
+            >{p.btnText} →</button>
           </div>
 
-          {/* Arrow nav */}
-          <div className="wp-nav">
-            <button className="wp-arrow" onClick={() => goTo('left')}>←</button>
-            <button className="wp-arrow" onClick={() => goTo('right')}>→</button>
-          </div>
-
-          {/* Dots */}
-          <div className="wp-dots">
-            {profiles.map((_, i) => (
-              <div key={i} className={`wp-dot-ind ${i === activeProfile ? 'active' : ''}`} />
-            ))}
+          <div className="wp-bottom">
+            <div className="wp-dots">
+              {PROFILES.map((_, i) => (
+                <div
+                  key={i}
+                  className={`wp-dot-pip ${i === activeProfile ? 'active' : ''}`}
+                  onClick={() => !exiting && handleGoTo(i > activeProfile ? 'right' : 'left')}
+                />
+              ))}
+            </div>
+            <div className="wp-arrows">
+              <button className="wp-arrow-btn" onClick={() => !exiting && handleGoTo('left')}>←</button>
+              <button className="wp-arrow-btn" onClick={() => !exiting && handleGoTo('right')}>→</button>
+            </div>
           </div>
         </div>
-
-        <div className="wp-footer">ARCODIC · Digital Service Provider</div>
       </div>
     </>
     );
   }
-
 
   return (
     <>
