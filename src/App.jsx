@@ -424,7 +424,7 @@ export default function App() {
           background: radial-gradient(circle, rgba(201,169,110,0.06) 0%, transparent 70%);
           pointer-events: none;
         }
-        .w-content { position: relative; z-index: 1; text-align: center; max-width: 540px; }
+        .w-content { position: relative; z-index: 1; text-align: center; max-width: 540px; margin: 0 auto; }
         .w-badge {
           display: inline-flex; align-items: center; gap: 8px;
           border: 1px solid rgba(201,169,110,0.2); padding: 6px 16px; margin-bottom: 40px;
