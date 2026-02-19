@@ -2,19 +2,18 @@ import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 
 const supabase = createClient(
-  process.env.VITE_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
+  'https://ctjwqktzdvbfijoqnxvo.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0andxa3R6ZHZiZmlqb3FueHZvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTQ4NjcwOSwiZXhwIjoyMDg3MDYyNzA5fQ.qcMPWEAKABq2D-jYXliLveX4wH3K_Uz8y2OQW1j_pVs'
 );
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend('re_c83UwjdW_GoxhXKvYpehePiEeTFAoiTt7');
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
-const { data, arcodic_signature, client_email, client_name } = req.body;
+  const { data, arcodic_signature, client_email, client_name } = req.body;
 
   try {
-    // 1. Save SOW to Supabase
     const { data: sow, error: sowError } = await supabase
       .from('sows')
       .insert({
@@ -30,7 +29,6 @@ const { data, arcodic_signature, client_email, client_name } = req.body;
 
     if (sowError) throw sowError;
 
-    // 2. Generate unique token for client link
     const { data: tokenRow, error: tokenError } = await supabase
       .from('sow_tokens')
       .insert({ sow_id: sow.id })
@@ -39,11 +37,10 @@ const { data, arcodic_signature, client_email, client_name } = req.body;
 
     if (tokenError) throw tokenError;
 
-    const signingLink = `${process.env.VITE_APP_URL}/sign/${tokenRow.token}`;
+    const signingLink = `https://arcodic-sow-portal.vercel.app/sign/${tokenRow.token}`;
 
-    // 3. Email the client
     await resend.emails.send({
-      from: 'ARCODIC <sow@yourdomain.com>',
+      from: 'ARCODIC <onboarding@resend.dev>',
       to: client_email,
       subject: `Action Required: Please sign your Statement of Work`,
       html: `
