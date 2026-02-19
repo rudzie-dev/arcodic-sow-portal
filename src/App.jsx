@@ -146,90 +146,6 @@ const TypeSignPad = ({ label, signatory, date, value, onChange, locked = false }
   );
 };
 
-/* ─────────────────────────────────────────────
-   SIGNATURE PAD (kept for compatibility — replaced by TypeSignPad)
-───────────────────────────────────────────── */
-const SignaturePad = ({ label, signatory, date }) => {
-  const canvasRef = useRef(null);
-  const [isSigned, setIsSigned] = useState(false);
-  const [isDrawing, setIsDrawing] = useState(false);
-
-  const getPos = (e, canvas) => {
-    const rect = canvas.getBoundingClientRect();
-    const src = e.touches ? e.touches[0] : e;
-    return { x: src.clientX - rect.left, y: src.clientY - rect.top };
-  };
-
-  const startDrawing = (e) => {
-    e.preventDefault();
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    ctx.strokeStyle = '#e8d5b0';
-    ctx.lineWidth = 1.5;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    const { x, y } = getPos(e, canvas);
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    setIsDrawing(true);
-  };
-
-  const draw = (e) => {
-    if (!isDrawing) return;
-    e.preventDefault();
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    const { x, y } = getPos(e, canvas);
-    ctx.lineTo(x, y);
-    ctx.stroke();
-  };
-
-  const endDrawing = () => {
-    setIsDrawing(false);
-    setIsSigned(true);
-  };
-
-  const clear = () => {
-    const canvas = canvasRef.current;
-    canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-    setIsSigned(false);
-  };
-
-  return (
-    <div className="sig-pad">
-      <span className="sig-label">{label}</span>
-      <div className="sig-canvas-wrap">
-        <canvas
-          ref={canvasRef}
-          width={380}
-          height={120}
-          onMouseDown={startDrawing}
-          onMouseMove={draw}
-          onMouseUp={endDrawing}
-          onMouseLeave={endDrawing}
-          onTouchStart={startDrawing}
-          onTouchMove={draw}
-          onTouchEnd={endDrawing}
-          className="sig-canvas"
-        />
-        {!isSigned && <span className="sig-placeholder">Draw signature here</span>}
-        <button onClick={clear} className="sig-clear print-hide" title="Clear">
-          <RefreshCcw size={13} />
-        </button>
-      </div>
-      <div className="sig-meta">
-        <div>
-          <div className="meta-key">Signatory</div>
-          <div className="meta-val">{signatory}</div>
-        </div>
-        <div>
-          <div className="meta-key">Date</div>
-          <div className="meta-val">{date}</div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 /* ─────────────────────────────────────────────
    EDITABLE FIELD
@@ -397,110 +313,439 @@ export default function App() {
   const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
   // ── WELCOME SCREEN ──
+  const [selectedUser, setSelectedUser] = useState(null);
+  const USERS = {
+    rudz: {
+      name: 'Rudz',
+      img: '/rudz.webp',
+      greeting: 'Welcome back, Rudz.',
+      sub: 'Ready to close another one?',
+      joke: "The portal's yours. Kaleb has read-only energy anyway.",
+      accent: '#c9a96e',
+      btnText: 'Enter Portal →',
+      nameColor: 'gold',
+    },
+    kaleb: {
+      name: 'Kaleb',
+      img: '/kaleb.webp',
+      greeting: 'Oh. Kaleb. Hi.',
+      sub: "Rudz said you'd show up eventually.",
+      joke: "The brief won't review itself. (It did. Rudz handled it.) 📋",
+      accent: '#4a8a7a',
+      btnText: 'Fine, let him in →',
+      nameColor: 'teal',
+    },
+  };
+
   if (!welcomed) return (
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@300;400;500&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body, #root { width: 100%; min-height: 100vh; margin: 0; padding: 0; background: #0a0906; }
-        body { font-family: 'DM Mono', monospace; -webkit-font-smoothing: antialiased; }
-        @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        html, body, #root { width: 100%; height: 100%; margin: 0; padding: 0; }
+        body { background: #0a0906; font-family: 'DM Mono', monospace; -webkit-font-smoothing: antialiased; }
+
+        @keyframes fadeUp   { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes fadeIn   { from{opacity:0} to{opacity:1} }
+        @keyframes pulse    { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        @keyframes tiltL    { from{transform:rotate(0deg) scale(1)} to{transform:rotate(-3deg) scale(1.04)} }
+        @keyframes tiltR    { from{transform:rotate(0deg) scale(1)} to{transform:rotate(3deg) scale(1.04)} }
+        @keyframes selectPop { 0%{transform:scale(1)} 50%{transform:scale(1.06)} 100%{transform:scale(1)} }
+
         .w-root {
-          width: 100vw; min-height: 100vh;
+          width: 100vw; height: 100vh;
           display: flex; flex-direction: column;
           align-items: center; justify-content: center;
-          background: #0a0906; position: relative;
-          overflow: hidden; padding: 40px;
+          background: #0a0906; position: relative; overflow: hidden;
         }
-        .w-grid {
+        .w-bg-grid {
           position: absolute; inset: 0; pointer-events: none;
           background-image:
-            linear-gradient(rgba(201,169,110,0.025) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(201,169,110,0.025) 1px, transparent 1px);
+            linear-gradient(rgba(201,169,110,0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(201,169,110,0.02) 1px, transparent 1px);
           background-size: 60px 60px;
         }
-        .w-glow {
-          position: absolute; width: 700px; height: 700px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(201,169,110,0.07) 0%, transparent 70%);
-          pointer-events: none; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        .w-bg-glow {
+          position: absolute; width: 800px; height: 800px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(201,169,110,0.05) 0%, transparent 65%);
+          pointer-events: none; top: 50%; left: 50%; transform: translate(-50%,-50%);
         }
-        .w-content {
+
+        /* ── TOP ── */
+        .w-top {
           position: relative; z-index: 1;
           display: flex; flex-direction: column; align-items: center;
-          text-align: center; max-width: 560px; width: 100%;
+          margin-bottom: 56px;
+          animation: fadeUp 0.5s ease both;
         }
         .w-badge {
           display: inline-flex; align-items: center; gap: 8px;
-          border: 1px solid rgba(201,169,110,0.2); padding: 6px 18px;
-          margin-bottom: 48px; font-size: 10px; letter-spacing: 0.18em;
-          text-transform: uppercase; color: #8a7250;
-          animation: fadeUp 0.5s ease both;
+          border: 1px solid rgba(201,169,110,0.18); padding: 5px 16px;
+          margin-bottom: 20px; font-size: 9px; letter-spacing: 0.2em;
+          text-transform: uppercase; color: #6b5a40;
         }
-        .w-dot { width:6px; height:6px; border-radius:50%; background:#c9a96e; animation:pulse 2s infinite; flex-shrink:0; }
+        .w-dot { width:5px; height:5px; border-radius:50%; background:#c9a96e; animation:pulse 2s infinite; flex-shrink:0; }
         .w-logo {
-          font-family: 'Cormorant Garamond', serif; font-size: 96px; font-weight: 700;
-          color: #f0e8d8; line-height: 1; margin-bottom: 6px;
-          animation: fadeUp 0.5s 0.08s ease both; letter-spacing: -0.02em;
+          font-family: 'Cormorant Garamond', serif; font-size: 72px; font-weight: 700;
+          color: #f0e8d8; line-height: 1; letter-spacing: -0.02em;
         }
         .w-logo span { color: #c9a96e; }
         .w-tagline {
-          font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
-          color: #4a4035; margin-bottom: 72px;
-          animation: fadeUp 0.5s 0.14s ease both;
+          font-size: 9px; letter-spacing: 0.24em; text-transform: uppercase;
+          color: #3a3028; margin-top: 4px;
+        }
+
+        /* ── PROFILE GRID ── */
+        .w-profiles {
+          position: relative; z-index: 1;
+          display: flex; align-items: flex-end; gap: 32px;
+          margin-bottom: 48px;
+          animation: fadeUp 0.5s 0.12s ease both;
+        }
+        .w-profile {
+          display: flex; flex-direction: column; align-items: center; gap: 16px;
+          cursor: pointer; background: none; border: none; padding: 0;
+          transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        /* alternating tilt on hover */
+        .w-profile.left:hover  { transform: rotate(-4deg) scale(1.05) translateY(-8px); }
+        .w-profile.right:hover { transform: rotate(4deg)  scale(1.05) translateY(-8px); }
+        .w-profile.selected    { animation: selectPop 0.35s ease both; }
+        .w-profile.left.selected  { transform: rotate(-2deg) scale(1.08) translateY(-12px); }
+        .w-profile.right.selected { transform: rotate(2deg)  scale(1.08) translateY(-12px); }
+        .w-profile.dimmed { opacity: 0.35; filter: grayscale(60%); transform: scale(0.92); }
+
+        .w-avatar-wrap {
+          position: relative;
+          width: 160px; height: 160px;
+        }
+        .w-avatar-img {
+          width: 160px; height: 160px;
+          object-fit: cover; display: block;
+          clip-path: polygon(10% 0%, 90% 0%, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0% 90%, 0% 10%);
+          filter: grayscale(30%) brightness(0.85);
+          transition: filter 0.3s;
+        }
+        .w-profile:hover .w-avatar-img,
+        .w-profile.selected .w-avatar-img { filter: grayscale(0%) brightness(1); }
+
+        .w-avatar-border {
+          position: absolute; inset: -3px;
+          clip-path: polygon(10% 0%, 90% 0%, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0% 90%, 0% 10%);
+          background: transparent;
+          transition: background 0.3s;
+          pointer-events: none;
+        }
+        .w-profile.rudz-sel .w-avatar-border {
+          background: linear-gradient(135deg, #c9a96e, transparent 60%);
+          inset: -3px;
+        }
+        .w-profile.kaleb-sel .w-avatar-border {
+          background: linear-gradient(135deg, #4a8a7a, transparent 60%);
+          inset: -3px;
+        }
+
+        .w-profile-label {
+          font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+          color: #4a4035; transition: color 0.2s;
+        }
+        .w-profile:hover .w-profile-label { color: #8a7250; }
+        .w-profile.rudz-sel .w-profile-label  { color: #c9a96e; }
+        .w-profile.kaleb-sel .w-profile-label { color: #4a8a7a; }
+
+        /* ── GREETING ── */
+        .w-greeting-wrap {
+          position: relative; z-index: 1;
+          display: flex; flex-direction: column; align-items: center;
+          text-align: center; max-width: 480px;
+          animation: fadeIn 0.3s ease both;
         }
         .w-greeting {
-          font-family: 'Cormorant Garamond', serif; font-size: 42px; font-weight: 600;
-          color: #f0e8d8; margin-bottom: 12px; line-height: 1.1;
-          animation: fadeUp 0.5s 0.2s ease both;
+          font-family: 'Cormorant Garamond', serif; font-size: 40px; font-weight: 600;
+          color: #f0e8d8; margin-bottom: 10px; line-height: 1.1;
         }
-        .w-greeting span { color: #c9a96e; }
-        .w-sub {
-          font-size: 12px; color: #5a5040; margin-bottom: 64px; line-height: 1.8;
-          animation: fadeUp 0.5s 0.25s ease both;
-        }
-        .w-divider {
-          width: 1px; height: 48px; background: linear-gradient(to bottom, transparent, #2a2520, transparent);
-          margin-bottom: 40px; animation: fadeUp 0.5s 0.28s ease both;
+        .w-greeting .gold { color: #c9a96e; }
+        .w-greeting .teal { color: #4a8a7a; }
+        .w-sub  { font-size: 12px; color: #5a5040; line-height: 1.8; margin-bottom: 6px; }
+        .w-joke { font-size: 11px; color: #3a3028; font-style: italic; margin-bottom: 40px; }
+        .w-vdivider {
+          width: 1px; height: 40px;
+          background: linear-gradient(to bottom, transparent, #2a2520, transparent);
+          margin-bottom: 32px;
         }
         .w-btn {
-          background: #c9a96e; color: #0a0906; border: none;
-          padding: 18px 64px; cursor: pointer;
+          border: none; padding: 16px 56px; cursor: pointer;
           font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500;
-          letter-spacing: 0.16em; text-transform: uppercase;
-          transition: all 0.2s; animation: fadeUp 0.5s 0.32s ease both;
+          letter-spacing: 0.16em; text-transform: uppercase; transition: all 0.2s;
         }
-        .w-btn:hover { background: #e0c080; transform: translateY(-2px); box-shadow: 0 8px 32px rgba(201,169,110,0.2); }
-        .w-kaleb {
-          position: absolute; bottom: 28px; left: 0; right: 0; text-align: center;
-          font-size: 10px; color: #2e2618; letter-spacing: 0.04em; font-style: italic;
-          animation: fadeUp 0.5s 0.5s ease both;
+        .w-btn.rudz  { background: #c9a96e; color: #0a0906; }
+        .w-btn.rudz:hover  { background: #e0c080; transform: translateY(-2px); box-shadow: 0 8px 32px rgba(201,169,110,0.25); }
+        .w-btn.kaleb { background: #4a8a7a; color: #0a0906; }
+        .w-btn.kaleb:hover { background: #5aaa9a; transform: translateY(-2px); box-shadow: 0 8px 32px rgba(74,138,122,0.2); }
+
+        .w-hint {
+          position: relative; z-index: 1;
+          font-size: 10px; color: #2e2618; letter-spacing: 0.1em;
+          margin-top: 32px;
+          animation: fadeUp 0.5s 0.3s ease both;
         }
         .w-footer {
           position: absolute; bottom: 14px; left: 0; right: 0; text-align: center;
-          font-size: 9px; color: #251f18; letter-spacing: 0.12em; text-transform: uppercase;
-          animation: fadeUp 0.5s 0.55s ease both;
+          font-size: 9px; color: #1e1a14; letter-spacing: 0.14em; text-transform: uppercase;
         }
       `}</style>
+
       <div className="w-root">
-        <div className="w-grid" />
-        <div className="w-glow" />
-        <div className="w-content">
+        <div className="w-bg-grid" />
+        <div className="w-bg-glow" />
+
+        {/* Logo */}
+        <div className="w-top">
           <div className="w-badge"><div className="w-dot" />SOW Portal · Internal Access</div>
           <div className="w-logo">ARC<span>.</span></div>
           <div className="w-tagline">Statement of Work System</div>
-          <div className="w-greeting">Welcome back, <span>Rudz</span>.</div>
-          <p className="w-sub">Another day, another deal to close.</p>
-          <div className="w-divider" />
-          <button className="w-btn" onClick={() => setWelcomed(true)}>Enter Portal →</button>
         </div>
-        <div className="w-kaleb">* Kaleb also has access. We let him think he's important. 💀</div>
+
+        {/* Profile Selectors */}
+        <div className="w-profiles">
+          {['rudz', 'kaleb'].map((id, idx) => {
+            const u = USERS[id];
+            const isSelected = selectedUser === id;
+            const isDimmed = selectedUser && selectedUser !== id;
+            const side = idx === 0 ? 'left' : 'right';
+            const selClass = isSelected ? (id === 'rudz' ? 'rudz-sel' : 'kaleb-sel') : '';
+            return (
+              <button
+                key={id}
+                className={`w-profile ${side} ${selClass} ${isDimmed ? 'dimmed' : ''} ${isSelected ? 'selected' : ''}`}
+                onClick={() => setSelectedUser(isSelected ? null : id)}
+              >
+                <div className="w-avatar-wrap">
+                  <img className="w-avatar-img" src={u.img} alt={u.name} />
+                  <div className="w-avatar-border" />
+                </div>
+                <span className="w-profile-label">{u.name}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Greeting */}
+        {selectedUser && (
+          <div className="w-greeting-wrap" key={selectedUser}>
+            <div className="w-greeting">
+              {selectedUser === 'rudz'
+                ? <>Welcome back, <span className="gold">Rudz</span>.</>
+                : <>Oh. <span className="teal">Kaleb</span>. Hi.</>
+              }
+            </div>
+            <p className="w-sub">{USERS[selectedUser].sub}</p>
+            <p className="w-joke">{USERS[selectedUser].joke}</p>
+            <div className="w-vdivider" />
+            <button
+              className={`w-btn ${selectedUser}`}
+              onClick={() => setWelcomed(true)}
+            >{USERS[selectedUser].btnText}</button>
+          </div>
+        )}
+
+        {!selectedUser && (
+          <p className="w-hint">Select a profile to continue</p>
+        )}
+
         <div className="w-footer">ARCODIC · Digital Service Provider</div>
       </div>
     </>
   );
 
+    return (
+      <>
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@300;400;500&display=swap');
+          *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+          html, body, #root { width: 100%; height: 100%; margin: 0; padding: 0; }
+          body { font-family: 'DM Mono', monospace; -webkit-font-smoothing: antialiased; background: #0a0906; }
+          @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+          @keyframes slideInRight { from{opacity:0;transform:translateX(60px)} to{opacity:1;transform:translateX(0)} }
+          @keyframes slideInLeft  { from{opacity:0;transform:translateX(-60px)} to{opacity:1;transform:translateX(0)} }
+          @keyframes slideOutLeft { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(-60px)} }
+          @keyframes slideOutRight{ from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(60px)} }
+          @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
 
+          .wp-root {
+            width: 100vw; height: 100vh;
+            display: grid; grid-template-columns: 1fr 1fr;
+            background: #0a0906; overflow: hidden; position: relative;
+          }
+
+          /* LEFT — image side */
+          .wp-image-side {
+            position: relative; overflow: hidden;
+            display: flex; align-items: flex-end;
+          }
+          .wp-image {
+            position: absolute; inset: 0;
+            background-size: cover; background-position: center top;
+            transition: all 0.5s ease;
+          }
+          .wp-image-overlay {
+            position: absolute; inset: 0;
+            background: linear-gradient(to right, rgba(10,9,6,0) 60%, #0a0906 100%),
+                        linear-gradient(to top, rgba(10,9,6,0.7) 0%, transparent 50%);
+          }
+          .wp-image-name {
+            position: absolute; bottom: 40px; left: 40px;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 14px; letter-spacing: 0.2em; text-transform: uppercase;
+            color: rgba(212,197,168,0.5);
+          }
+
+          /* RIGHT — content side */
+          .wp-content-side {
+            display: flex; flex-direction: column;
+            justify-content: center; padding: 80px 72px 80px 56px;
+            position: relative;
+          }
+          .wp-grid {
+            position: absolute; inset: 0; pointer-events: none;
+            background-image:
+              linear-gradient(rgba(201,169,110,0.02) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(201,169,110,0.02) 1px, transparent 1px);
+            background-size: 48px 48px;
+          }
+          .wp-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            border: 1px solid rgba(201,169,110,0.15); padding: 5px 14px;
+            margin-bottom: 56px; font-size: 9px; letter-spacing: 0.2em;
+            text-transform: uppercase; color: #6b5a40; width: fit-content;
+            animation: fadeUp 0.4s ease both;
+          }
+          .wp-dot { width:5px; height:5px; border-radius:50%; background:#c9a96e; animation:pulse 2s infinite; }
+          .wp-logo {
+            font-family: 'Cormorant Garamond', serif; font-size: 13px; font-weight: 700;
+            letter-spacing: 0.3em; text-transform: uppercase; color: #3a3028;
+            margin-bottom: 64px; animation: fadeUp 0.4s 0.05s ease both;
+          }
+
+          .wp-card {
+            position: relative;
+          }
+          .wp-card.exit-left  { animation: slideOutLeft  0.3s ease forwards; }
+          .wp-card.exit-right { animation: slideOutRight 0.3s ease forwards; }
+          .wp-card.enter-right{ animation: slideInRight  0.3s ease both; }
+          .wp-card.enter-left { animation: slideInLeft   0.3s ease both; }
+
+          .wp-greeting {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 52px; font-weight: 600; line-height: 1.1;
+            color: #f0e8d8; margin-bottom: 6px;
+          }
+          .wp-greeting-name { display: block; font-size: 68px; }
+          .wp-greeting-name.gold { color: #c9a96e; }
+          .wp-greeting-name.teal { color: #4a8a7a; }
+
+          .wp-sub {
+            font-size: 12px; color: #5a5040; margin-top: 20px;
+            margin-bottom: 6px; line-height: 1.8;
+          }
+          .wp-joke { font-size: 11px; color: #3a3028; font-style: italic; margin-bottom: 0; }
+
+          .wp-divider {
+            width: 32px; height: 1px; background: #2a2520; margin: 36px 0;
+          }
+
+          .wp-btn {
+            display: inline-flex; align-items: center; gap: 10px;
+            border: none; padding: 16px 40px; cursor: pointer;
+            font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500;
+            letter-spacing: 0.14em; text-transform: uppercase; transition: all 0.2s;
+            width: fit-content;
+          }
+          .btn-gold { background: #c9a96e; color: #0a0906; }
+          .btn-gold:hover { background: #e0c080; transform: translateX(4px); }
+          .btn-teal { background: #4a8a7a; color: #0a0906; }
+          .btn-teal:hover { background: #5aaa9a; transform: translateX(4px); }
+
+          /* NAV arrows */
+          .wp-nav {
+            position: absolute; bottom: 48px; right: 72px;
+            display: flex; gap: 12px; z-index: 10;
+          }
+          .wp-arrow {
+            width: 40px; height: 40px; border: 1px solid #2a2520;
+            background: transparent; color: #6b6050; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; transition: all 0.2s;
+          }
+          .wp-arrow:hover { border-color: #c9a96e; color: #c9a96e; }
+
+          /* Dots */
+          .wp-dots {
+            position: absolute; bottom: 56px; left: 56px;
+            display: flex; gap: 8px;
+          }
+          .wp-dot-ind {
+            width: 20px; height: 2px; background: #2a2520; transition: all 0.3s;
+          }
+          .wp-dot-ind.active { background: #c9a96e; width: 32px; }
+
+          .wp-footer {
+            position: absolute; top: 32px; left: 40px;
+            font-size: 9px; color: #2a2218; letter-spacing: 0.15em; text-transform: uppercase;
+          }
+        `}</style>
+        <div className="wp-root">
+          {/* LEFT — photo */}
+          <div className="wp-image-side">
+            <div
+              className="wp-image"
+              style={{ backgroundImage: `url(${p.image})` }}
+            />
+            <div className="wp-image-overlay" />
+            <div className="wp-image-name">{p.name}</div>
+          </div>
+
+          {/* RIGHT — content */}
+          <div className="wp-content-side">
+            <div className="wp-grid" />
+            <div className="wp-badge"><div className="wp-dot" />SOW Portal · Internal Access</div>
+            <div className="wp-logo">Arcodic</div>
+
+            <div className={`wp-card ${exiting ? `exit-${exitDir}` : 'enter-right'}`}>
+              <div className="wp-greeting">
+                {p.greeting}
+                <span className={`wp-greeting-name ${p.nameStyle}`}>{p.name}.</span>
+              </div>
+              <p className="wp-sub">{p.sub}</p>
+              {p.joke && <p className="wp-joke">{p.joke}</p>}
+              <div className="wp-divider" />
+              <button
+                className={`wp-btn ${p.btnClass}`}
+                onClick={() => setWelcomed(true)}
+              >
+                {p.btnText}
+              </button>
+            </div>
+
+            {/* Arrow nav */}
+            <div className="wp-nav">
+              <button className="wp-arrow" onClick={() => goTo('right')}>←</button>
+              <button className="wp-arrow" onClick={() => goTo('left')}>→</button>
+            </div>
+
+            {/* Dots */}
+            <div className="wp-dots">
+              {profiles.map((_, i) => (
+                <div key={i} className={`wp-dot-ind ${i === activeProfile ? 'active' : ''}`} />
+              ))}
+            </div>
+          </div>
+
+          <div className="wp-footer">ARCODIC · Digital Service Provider</div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
