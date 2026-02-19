@@ -402,7 +402,8 @@ export default function App() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@300;400;500&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: #0a0906; font-family: 'DM Mono', monospace; -webkit-font-smoothing: antialiased; }
+        body { background: #0a0906; font-family: 'DM Mono', monospace; -webkit-font-smoothing: antialiased; margin: 0; padding: 0; width: 100%; }
+        #root { width: 100%; }
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(24px); }
           to   { opacity: 1; transform: translateY(0); }
