@@ -238,6 +238,7 @@ export default function App() {
   const [pwError, setPwError] = useState('');
   const [exiting, setExiting] = useState(false);
   const [exitDir, setExitDir] = useState('left');
+  const [enterDir, setEnterDir] = useState('right');
   const [showPw, setShowPw] = useState(false);
 
   const sendToClient = async () => {
@@ -350,7 +351,8 @@ export default function App() {
   ];
 
   const goTo = (dir) => {
-    setExitDir(dir === 'left' ? 'left' : 'right');
+    setExitDir(dir);
+    setEnterDir(dir === 'left' ? 'right' : 'left');
     setExiting(true);
     setTimeout(() => {
       setActiveProfile(i => (i + (dir === 'left' ? -1 : 1) + profiles.length) % profiles.length);
@@ -359,6 +361,12 @@ export default function App() {
       setExiting(false);
     }, 280);
   };
+
+  useEffect(() => {
+    if (welcomed) return;
+    const timer = setInterval(() => goTo('right'), 5000);
+    return () => clearInterval(timer);
+  }, [welcomed, activeProfile]);
 
   const handleLogin = () => {
     const p = profiles[activeProfile];
@@ -582,7 +590,7 @@ export default function App() {
         {/* LEFT — photo */}
         <div className="wp-image-side">
           <div
-            className={`wp-image ${exiting ? `exit-${exitDir}` : 'enter-right'}`}
+            className={`wp-image ${exiting ? `exit-${exitDir}` : `enter-${enterDir}`}`}
             style={{ backgroundImage: `url(${p.image})` }}
           />
           <div className="wp-image-overlay" />
@@ -599,7 +607,7 @@ export default function App() {
           <div className="wp-badge"><div className="wp-dot" />SOW Portal · Internal Access</div>
           <div className="wp-logo">Arcodic</div>
 
-          <div className={`wp-card ${exiting ? `exit-${exitDir}` : 'enter-right'}`}>
+          <div className={`wp-card ${exiting ? `exit-${exitDir}` : `enter-${enterDir}`}`}>
             <div className="wp-greeting">
               {p.greeting}
             </div>
@@ -639,8 +647,8 @@ export default function App() {
 
           {/* Arrow nav */}
           <div className="wp-nav">
-            <button className="wp-arrow" onClick={() => goTo('right')}>←</button>
-            <button className="wp-arrow" onClick={() => goTo('left')}>→</button>
+            <button className="wp-arrow" onClick={() => goTo('left')}>←</button>
+            <button className="wp-arrow" onClick={() => goTo('right')}>→</button>
           </div>
 
           {/* Dots */}
