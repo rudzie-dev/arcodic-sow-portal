@@ -309,6 +309,7 @@ export default function App() {
     }
   });
 
+  const [welcomed, setWelcomed] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [arcSig, setArcSig] = useState('');
   const [sending, setSending] = useState(false);
@@ -394,6 +395,101 @@ export default function App() {
   });
 
   const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  // ── WELCOME SCREEN ──
+  if (!welcomed) return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@300;400;500&display=swap');
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #0a0906; font-family: 'DM Mono', monospace; -webkit-font-smoothing: antialiased; }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(24px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        .w-root {
+          min-height: 100vh; display: flex; flex-direction: column;
+          align-items: center; justify-content: center;
+          background: #0a0906; position: relative; overflow: hidden; padding: 40px;
+        }
+        .w-grid {
+          position: absolute; inset: 0;
+          background-image: linear-gradient(rgba(201,169,110,0.025) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(201,169,110,0.025) 1px, transparent 1px);
+          background-size: 60px 60px; pointer-events: none;
+        }
+        .w-glow {
+          position: absolute; width: 600px; height: 600px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(201,169,110,0.06) 0%, transparent 70%);
+          pointer-events: none;
+        }
+        .w-content { position: relative; z-index: 1; text-align: center; max-width: 540px; }
+        .w-badge {
+          display: inline-flex; align-items: center; gap: 8px;
+          border: 1px solid rgba(201,169,110,0.2); padding: 6px 16px; margin-bottom: 40px;
+          font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #8a7250;
+          animation: fadeUp 0.5s ease both;
+        }
+        .w-dot { width:6px; height:6px; border-radius:50%; background:#c9a96e; animation: pulse 2s infinite; }
+        .w-logo {
+          font-family: 'Cormorant Garamond', serif; font-size: 80px; font-weight: 700;
+          color: #f0e8d8; line-height: 1; margin-bottom: 4px;
+          animation: fadeUp 0.5s 0.1s ease both;
+        }
+        .w-logo span { color: #c9a96e; }
+        .w-tagline {
+          font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+          color: #6b6050; margin-bottom: 64px;
+          animation: fadeUp 0.5s 0.15s ease both;
+        }
+        .w-greeting {
+          font-family: 'Cormorant Garamond', serif; font-size: 38px; font-weight: 600;
+          color: #f0e8d8; margin-bottom: 10px;
+          animation: fadeUp 0.5s 0.2s ease both;
+        }
+        .w-greeting span { color: #c9a96e; }
+        .w-sub {
+          font-size: 12px; color: #6b6050; margin-bottom: 56px; line-height: 1.8;
+          animation: fadeUp 0.5s 0.25s ease both;
+        }
+        .w-divider { width:40px; height:1px; background:#2a2520; margin: 0 auto 44px; animation: fadeUp 0.5s 0.28s ease both; }
+        .w-btn {
+          background: #c9a96e; color: #0a0906; border: none; padding: 16px 52px;
+          font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500;
+          letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer;
+          transition: all 0.2s; animation: fadeUp 0.5s 0.32s ease both;
+        }
+        .w-btn:hover { background: #e8d5b0; transform: translateY(-1px); }
+        .w-footer {
+          position: absolute; bottom: 24px; left: 0; right: 0; text-align: center;
+          font-size: 10px; color: #2e2820; letter-spacing: 0.08em;
+          animation: fadeUp 0.5s 0.5s ease both;
+        }
+        .w-kaleb {
+          position: absolute; bottom: 52px; left: 0; right: 0; text-align: center;
+          font-size: 10px; color: #3a3028; letter-spacing: 0.04em; font-style: italic;
+          animation: fadeUp 0.5s 0.45s ease both;
+        }
+      `}</style>
+      <div className="w-root">
+        <div className="w-grid" />
+        <div className="w-glow" />
+        <div className="w-content">
+          <div className="w-badge"><div className="w-dot" />SOW Portal · Internal Access</div>
+          <div className="w-logo">ARC<span>.</span></div>
+          <div className="w-tagline">Statement of Work System</div>
+          <div className="w-greeting">Welcome back, <span>Rudz</span>.</div>
+          <p className="w-sub">Another day, another deal to close.</p>
+          <div className="w-divider" />
+          <button className="w-btn" onClick={() => setWelcomed(true)}>Enter Portal →</button>
+        </div>
+        <div className="w-kaleb">* Kaleb also has access. We don't talk about it.</div>
+        <div className="w-footer">ARCODIC · Digital Service Provider</div>
+      </div>
+    </>
+  );
+
 
   return (
     <>
