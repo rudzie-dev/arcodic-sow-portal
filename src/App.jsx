@@ -235,6 +235,36 @@ export default function App() {
   const [sowId, setSowId] = useState(() => localStorage.getItem('arcodic_sow_id'));
   const [clientSig, setClientSig] = useState(null);
   const [clientSignedAt, setClientSignedAt] = useState(null);
+
+  // Read ?sow= URL param on mount (set by dashboard Print action)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paramSow = params.get('sow');
+    if (paramSow && paramSow !== sowId) {
+      setSowId(paramSow);
+      localStorage.setItem('arcodic_sow_id', paramSow);
+      setClientSig(null);
+      setClientSignedAt(null);
+      setSent(true); // already sent if viewing from dashboard
+      // Clean URL
+      window.history.replaceState({}, '', '/');
+    }
+  }, []);
+
+  // Re-sync sowId when window gets focus (e.g. returning from dashboard)
+  useEffect(() => {
+    const onFocus = () => {
+      const stored = localStorage.getItem('arcodic_sow_id');
+      if (stored && stored !== sowId) {
+        setSowId(stored);
+        setClientSig(null);
+        setClientSignedAt(null);
+        setSent(false);
+      }
+    };
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [sowId]);
   const [sendError, setSendError] = useState('');
   const [showSendModal, setShowSendModal] = useState(false);
   const [clientEmailInput, setClientEmailInput] = useState('');
@@ -281,27 +311,41 @@ export default function App() {
   }, []);
 
   // Poll Supabase for client signature completion
+  const pollTimerRef = useRef(null);
+
   useEffect(() => {
     if (!sowId) return;
+
     const SUPABASE_URL = 'https://ctjwqktzdvbfijoqnxvo.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0andxa3R6ZHZiZmlqb3FueHZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0ODY3MDksImV4cCI6MjA4NzA2MjcwOX0.3UBqBBNiWRiTVDarLcTgVtJSZasVRBJTRNuXpR3mEXo';
+
     const poll = async () => {
       try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/sows?id=eq.${sowId}&select=status,client_signature,client_signed_at,client_name`, {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-        });
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/sows?id=eq.${sowId}&select=status,client_signature,client_signed_at`,
+          { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+        );
         const rows = await res.json();
         if (rows?.[0]?.status === 'completed') {
           setClientSig(rows[0].client_signature);
           setClientSignedAt(rows[0].client_signed_at);
           setSent(true);
-          clearInterval(timer);
+          // Stop polling — client has signed
+          if (pollTimerRef.current) {
+            clearInterval(pollTimerRef.current);
+            pollTimerRef.current = null;
+          }
         }
       } catch(e) {}
     };
-    poll(); // check immediately on load
-    const timer = setInterval(poll, 10000); // then every 10s
-    return () => clearInterval(timer);
+
+    // Fire immediately, then every 8s
+    poll();
+    pollTimerRef.current = setInterval(poll, 8000);
+
+    return () => {
+      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+    };
   }, [sowId]);
 
   const set = (path, value) => {

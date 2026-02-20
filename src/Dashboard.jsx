@@ -422,14 +422,17 @@ export default function Dashboard() {
                               className="db-act-btn primary"
                               onClick={() => {
                                 localStorage.setItem('arcodic_sow_id', sow.id);
-                                navigate('/');
+                                navigate('/?sow=' + sow.id);
                               }}
                             >
-                              Print
+                              View & Print
                             </button>
                           )}
                           {sow.status === 'sent' && (
-                            <button className="db-act-btn">Awaiting…</button>
+                            <button
+                              className="db-act-btn"
+                              style={{cursor:'default', opacity:0.5}}
+                            >◎ Awaiting signature</button>
                           )}
                           {sow.status === 'draft' && (
                             <button
