@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Plus, Trash2, Download, Briefcase, User, Layers,
   Calendar, CreditCard, PenTool, CheckCircle2, RefreshCcw,
@@ -225,6 +226,7 @@ export default function App() {
     }
   });
 
+  const navigate = useNavigate();
   const [welcomed, setWelcomed] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [arcSig, setArcSig] = useState('');
