@@ -1261,10 +1261,19 @@ export default function App() {
           <div className="nav-logo">A</div>
           <span className="nav-name">ARCODIC <span>SOW Portal</span></span>
         </div>
-        <button className="nav-btn" onClick={() => window.print()}>
-          <Download size={13} />
-          Generate PDF
-        </button>
+        <div style={{display:'flex',gap:10,alignItems:'center'}}>
+          <button
+            className="nav-btn print-hide"
+            onClick={() => navigate('/dashboard')}
+            style={{background:'transparent',border:'1px solid var(--border)',color:'var(--gold-dim)'}}
+          >
+            Dashboard
+          </button>
+          <button className="nav-btn" onClick={() => window.print()}>
+            <Download size={13} />
+            Generate PDF
+          </button>
+        </div>
       </nav>
 
       <div className="page">
