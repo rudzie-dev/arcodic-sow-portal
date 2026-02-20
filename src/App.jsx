@@ -357,41 +357,40 @@ export default function App() {
       name: 'Rudz',
       image: '/rudz.webp',
       password: 'URfavraut156',
-      greeting: 'Welcome back,',
-      nameStyle: 'gold',
-      sub: "The portal's been waiting. Let's close something.",
+      title: 'Founder & CEO',
+      greeting: 'Welcome back.',
+      sub: "The portal's ready. Let's close something.",
       joke: null,
       btnText: 'Enter Portal',
-      btnClass: 'gold',
-      badge: 'Founder · CEO',
+      color: '#c9a96e',
     },
     {
       id: 'kaleb',
       name: 'Kaleb',
       image: '/kaleb.webp',
       password: '12345',
-      greeting: 'Oh. You actually showed up,',
-      nameStyle: 'teal',
-      sub: "Rudz already handled the brief. You're welcome.",
-      joke: "Password is still 12345. We've talked about this. 💀",
+      title: 'Co-Founder',
+      greeting: 'Oh. Kaleb.',
+      sub: "Rudz already handled it. You're welcome.",
+      joke: "Password hasn't changed. We've had this talk. 💀",
       btnText: 'Fine, let him in',
-      btnClass: 'teal',
-      badge: 'Co-Founder · Probably on LinkedIn',
+      color: '#4a8a7a',
     },
   ];
 
-  const PROFILE_COUNT = PROFILES.length;
+  const TOTAL = PROFILES.length;
 
   const handleGoTo = (dir) => {
+    if (exiting) return;
     setExitDir(dir);
     setEnterDir(dir === 'left' ? 'right' : 'left');
     setExiting(true);
     setTimeout(() => {
-      setActiveProfile(prev => (prev + (dir === 'left' ? -1 : 1) + PROFILE_COUNT) % PROFILE_COUNT);
+      setActiveProfile(prev => (prev + (dir === 'left' ? -1 : 1) + TOTAL) % TOTAL);
       setPassword('');
       setPwError('');
       setExiting(false);
-    }, 300);
+    }, 320);
   };
 
   const handleLogin = () => {
@@ -399,280 +398,519 @@ export default function App() {
     if (password === p.password) {
       setWelcomed(true);
     } else {
-      setPwError('Wrong password. Try harder.');
-      setTimeout(() => setPwError(''), 2200);
+      setPwError('Incorrect password.');
+      setTimeout(() => setPwError(''), 2500);
     }
   };
 
-  // Auto-rotate — pauses when user is typing
   useEffect(() => {
     if (welcomed || pwFocused) return;
-    const t = setInterval(() => handleGoTo('right'), 5000);
+    const t = setInterval(() => handleGoTo('right'), 6000);
     return () => clearInterval(t);
-  }, [welcomed, pwFocused, activeProfile]);
+  }, [welcomed, pwFocused, activeProfile, exiting]);
 
   if (!welcomed) {
-    const p = PROFILES[activeProfile];
+    const active = PROFILES[activeProfile];
+    const prev = PROFILES[(activeProfile - 1 + TOTAL) % TOTAL];
+    const next = PROFILES[(activeProfile + 1) % TOTAL];
+
     return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Mono:wght@300;400;500&display=swap');
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body, #root { width: 100%; height: 100%; margin: 0; padding: 0; }
-        body { background: #080705; font-family: 'DM Mono', monospace; -webkit-font-smoothing: antialiased; }
+      <>
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap');
+          *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+          html, body, #root { width: 100%; height: 100%; margin: 0; padding: 0; }
+          body { background: #080705; font-family: 'DM Mono', monospace; -webkit-font-smoothing: antialiased; overflow: hidden; }
 
-        @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:0.25} }
-        @keyframes shake  { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-5px)} 40%,80%{transform:translateX(5px)} }
-        @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+          @keyframes wFadeIn    { from{opacity:0} to{opacity:1} }
+          @keyframes wSlideUp   { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+          @keyframes wPulse     { 0%,100%{opacity:1} 50%{opacity:0.3} }
+          @keyframes wShake     { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-5px)} 40%,80%{transform:translateX(5px)} }
+          @keyframes wSpin      { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+          @keyframes wAvatarIn  { from{opacity:0;transform:scale(0.88)} to{opacity:1;transform:scale(1)} }
 
-        @keyframes slide-in-right  { from{opacity:0;transform:translateX(48px)}  to{opacity:1;transform:translateX(0)} }
-        @keyframes slide-in-left   { from{opacity:0;transform:translateX(-48px)} to{opacity:1;transform:translateX(0)} }
-        @keyframes slide-out-left  { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(-48px)} }
-        @keyframes slide-out-right { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(48px)} }
+          .w-root {
+            width: 100vw; height: 100vh;
+            display: grid; grid-template-columns: 52% 48%;
+            background: #080705;
+          }
 
-        @keyframes img-in-right  { from{opacity:0;transform:scale(1.06) translateX(32px)} to{opacity:1;transform:scale(1) translateX(0)} }
-        @keyframes img-in-left   { from{opacity:0;transform:scale(1.06) translateX(-32px)} to{opacity:1;transform:scale(1) translateX(0)} }
-        @keyframes img-out-left  { from{opacity:1;transform:scale(1)} to{opacity:0;transform:scale(0.96) translateX(-24px)} }
-        @keyframes img-out-right { from{opacity:1;transform:scale(1)} to{opacity:0;transform:scale(0.96) translateX(24px)} }
+          /* ── LEFT PANEL ── */
+          .w-left {
+            position: relative;
+            background: linear-gradient(135deg, #080705 0%, #0e0c09 50%, #080705 100%);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            overflow: hidden;
+          }
 
-        .wp-root {
-          width: 100vw; height: 100vh;
-          display: grid; grid-template-columns: 55% 45%;
-          overflow: hidden; background: #080705;
-        }
+          /* Subtle grid pattern */
+          .w-left-grid {
+            position: absolute; inset: 0; pointer-events: none;
+            background-image:
+              linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+            background-size: 60px 60px;
+          }
 
-        /* IMAGE SIDE */
-        .wp-left { position: relative; overflow: hidden; }
-        .wp-img {
-          position: absolute; inset: 0;
-          background-size: cover; background-position: center top;
-        }
-        .wp-img.in-right  { animation: img-in-right  0.55s cubic-bezier(0.22,1,0.36,1) both; }
-        .wp-img.in-left   { animation: img-in-left   0.55s cubic-bezier(0.22,1,0.36,1) both; }
-        .wp-img.out-left  { animation: img-out-left  0.3s ease both; }
-        .wp-img.out-right { animation: img-out-right 0.3s ease both; }
+          /* Radial glow behind carousel */
+          .w-left-glow {
+            position: absolute;
+            width: 420px; height: 420px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(201,169,110,0.06) 0%, transparent 70%);
+            pointer-events: none;
+          }
 
-        .wp-img-overlay {
-          position: absolute; inset: 0;
-          background:
-            linear-gradient(to right, rgba(8,7,5,0) 40%, #080705 100%),
-            linear-gradient(to top, rgba(8,7,5,0.75) 0%, transparent 45%);
-        }
-        .wp-name-wrap {
-          position: absolute; bottom: 44px; left: 40px;
-        }
-        .wp-name-wrap.in-right  { animation: slide-in-right  0.5s 0.1s cubic-bezier(0.22,1,0.36,1) both; }
-        .wp-name-wrap.in-left   { animation: slide-in-left   0.5s 0.1s cubic-bezier(0.22,1,0.36,1) both; }
-        .wp-name-wrap.out-left  { animation: slide-out-left  0.3s ease both; }
-        .wp-name-wrap.out-right { animation: slide-out-right 0.3s ease both; }
-        .wp-big-name {
-          display: block;
-          font-family: 'Cormorant Garamond', serif; font-size: 72px; font-weight: 700;
-          color: #f0e8d8; line-height: 1;
-          text-shadow: 0 4px 48px rgba(0,0,0,0.9);
-        }
-        .wp-big-badge {
-          display: block; margin-top: 6px;
-          font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
-          color: rgba(212,197,168,0.4);
-        }
+          /* Corner accent lines */
+          .w-left::before {
+            content: '';
+            position: absolute; top: 32px; left: 32px;
+            width: 48px; height: 48px;
+            border-top: 1px solid #1a1610;
+            border-left: 1px solid #1a1610;
+          }
+          .w-left::after {
+            content: '';
+            position: absolute; bottom: 32px; right: 32px;
+            width: 48px; height: 48px;
+            border-bottom: 1px solid #1a1610;
+            border-right: 1px solid #1a1610;
+          }
 
-        /* ARROW OVERLAYS on left */
-        .wp-left-arrows {
-          position: absolute; bottom: 44px; right: 24px;
-          display: flex; flex-direction: column; gap: 8px; z-index: 10;
-        }
+          /* Brand top-left */
+          .w-brand {
+            position: absolute; top: 36px; left: 48px;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 15px; font-weight: 600; letter-spacing: 0.12em;
+            text-transform: uppercase; color: #3a3028;
+            animation: wFadeIn 0.6s ease both;
+          }
 
-        /* RIGHT SIDE */
-        .wp-right {
-          position: relative; overflow: hidden;
-          display: flex; flex-direction: column; justify-content: center;
-          padding: 56px 52px;
-        }
-        .wp-right-grid {
-          position: absolute; inset: 0; pointer-events: none;
-          background-image:
-            linear-gradient(rgba(201,169,110,0.02) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(201,169,110,0.02) 1px, transparent 1px);
-          background-size: 44px 44px;
-        }
-        .wp-right-glow {
-          position: absolute; inset: 0; pointer-events: none;
-          background: radial-gradient(ellipse at 80% 40%, rgba(201,169,110,0.04) 0%, transparent 60%);
-        }
+          /* CAROUSEL */
+          .w-carousel {
+            position: relative;
+            width: 320px; height: 320px;
+            display: flex; align-items: center; justify-content: center;
+            animation: wFadeIn 0.6s 0.1s ease both;
+          }
 
-        .wp-top-bar {
-          position: absolute; top: 32px; left: 52px; right: 52px;
-          display: flex; align-items: center; justify-content: space-between;
-          animation: fadeUp 0.4s ease both;
-        }
-        .wp-brand {
-          font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 700;
-          color: #3a3028; letter-spacing: 0.06em;
-        }
-        .wp-live {
-          display: flex; align-items: center; gap: 6px;
-          font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: #3a3028;
-        }
-        .wp-live-dot { width:5px; height:5px; border-radius:50%; background:#c9a96e; animation:pulse 2s infinite; }
+          /* Avatar slots */
+          .w-avatar {
+            position: absolute;
+            border-radius: 50%;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            user-select: none;
+          }
+          .w-avatar img {
+            width: 100%; height: 100%;
+            object-fit: cover; object-position: top center;
+            display: block;
+          }
+          .w-avatar-placeholder {
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 40px; font-weight: 600; color: rgba(255,255,255,0.4);
+          }
 
-        /* CARD */
-        .wp-card { position: relative; z-index: 1; }
-        .wp-card.in-right  { animation: slide-in-right  0.45s cubic-bezier(0.22,1,0.36,1) both; }
-        .wp-card.in-left   { animation: slide-in-left   0.45s cubic-bezier(0.22,1,0.36,1) both; }
-        .wp-card.out-left  { animation: slide-out-left  0.3s ease both; }
-        .wp-card.out-right { animation: slide-out-right 0.3s ease both; }
+          /* Active — front/center */
+          .w-avatar-active {
+            width: 168px; height: 168px;
+            left: 50%; top: 50%;
+            transform: translate(-50%, -50%) scale(1);
+            z-index: 3;
+            box-shadow:
+              0 0 0 3px rgba(255,255,255,0.12),
+              0 0 0 6px rgba(255,255,255,0.04),
+              0 24px 64px rgba(0,0,0,0.6);
+            filter: brightness(1);
+          }
 
-        .wp-greeting-label {
-          font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
-          color: #4a3a28; margin-bottom: 6px;
-        }
-        .wp-heading {
-          font-family: 'Cormorant Garamond', serif; font-size: 56px; font-weight: 700;
-          line-height: 1; margin-bottom: 20px;
-        }
-        .wp-heading.gold { color: #c9a96e; }
-        .wp-heading.teal { color: #4a8a7a; }
+          /* Left — back left */
+          .w-avatar-left {
+            width: 110px; height: 110px;
+            left: 10px; top: 50%;
+            transform: translateY(-50%) scale(1) perspective(600px) rotateY(18deg);
+            z-index: 2;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+            filter: brightness(0.55) saturate(0.6);
+          }
+          .w-avatar-left:hover { filter: brightness(0.75) saturate(0.8); }
 
-        .wp-sub  { font-size: 12px; color: #5a5040; line-height: 1.9; margin-bottom: 6px; }
-        .wp-joke { font-size: 11px; color: #3a2e20; font-style: italic; }
+          /* Right — back right */
+          .w-avatar-right {
+            width: 110px; height: 110px;
+            right: 10px; top: 50%;
+            transform: translateY(-50%) scale(1) perspective(600px) rotateY(-18deg);
+            z-index: 2;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+            filter: brightness(0.55) saturate(0.6);
+          }
+          .w-avatar-right:hover { filter: brightness(0.75) saturate(0.8); }
 
-        .wp-divider { width: 28px; height: 1px; background: #252018; margin: 28px 0; }
+          /* Ring on active */
+          .w-avatar-active::after {
+            content: '';
+            position: absolute; inset: -4px; border-radius: 50%;
+            border: 2px solid rgba(201,169,110,0.2);
+            animation: wFadeIn 0.3s ease both;
+          }
 
-        /* PASSWORD */
-        .wp-pw-label { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #3a3028; margin-bottom: 10px; }
-        .wp-pw-row {
-          display: flex; align-items: center;
-          border-bottom: 1px solid #252018; margin-bottom: 6px; transition: border-color 0.2s;
-        }
-        .wp-pw-row.focused-gold { border-color: #c9a96e; }
-        .wp-pw-row.focused-teal { border-color: #4a8a7a; }
-        .wp-pw-input {
-          flex: 1; background: transparent; border: none; outline: none;
-          color: #d4c5a8; font-family: 'DM Mono', monospace;
-          font-size: 18px; padding: 10px 0; letter-spacing: 0.12em;
-        }
-        .wp-pw-toggle {
-          background: none; border: none; cursor: pointer;
-          font-family: 'DM Mono', monospace;
-          font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
-          color: #3a3028; padding: 10px 0 10px 12px; transition: color 0.2s;
-        }
-        .wp-pw-toggle:hover { color: #8a7250; }
-        .wp-pw-error { font-size: 10px; color: #c0614a; min-height: 18px; margin-bottom: 20px; letter-spacing: 0.04em; }
-        .wp-pw-error.shake { animation: shake 0.4s ease; }
-        .wp-pw-spacer { height: 38px; margin-bottom: 20px; }
+          /* Profile name + title */
+          .w-profile-info {
+            margin-top: 32px; text-align: center;
+            animation: wSlideUp 0.35s ease both;
+            position: relative; z-index: 4;
+          }
+          .w-profile-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 28px; font-weight: 600; color: #f0e8d8;
+            letter-spacing: 0.02em; margin-bottom: 4px;
+          }
+          .w-profile-title {
+            font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase;
+            color: #4a4035;
+          }
 
-        .wp-btn {
-          border: none; padding: 16px 40px; cursor: pointer;
-          font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500;
-          letter-spacing: 0.18em; text-transform: uppercase;
-          transition: all 0.2s; display: inline-flex; align-items: center; gap: 12px;
-        }
-        .wp-btn.gold { background: #c9a96e; color: #080705; }
-        .wp-btn.gold:hover { background: #ddb97e; transform: translateX(6px); }
-        .wp-btn.teal { background: #4a8a7a; color: #080705; }
-        .wp-btn.teal:hover { background: #5aaa9a; transform: translateX(6px); }
-        .wp-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; }
+          /* Arrows */
+          .w-arrows {
+            display: flex; align-items: center; gap: 12px;
+            margin-top: 32px; position: relative; z-index: 4;
+            animation: wSlideUp 0.4s 0.15s ease both;
+          }
+          .w-arrow {
+            width: 36px; height: 36px;
+            background: rgba(201,169,110,0.04);
+            border: 1px solid #2a2520;
+            color: #4a3a28;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; border-radius: 50%; font-size: 14px;
+            transition: all 0.2s; user-select: none;
+          }
+          .w-arrow:hover {
+            background: rgba(201,169,110,0.08);
+            border-color: #c9a96e;
+            color: #c9a96e;
+            transform: scale(1.08);
+          }
+          .w-arrow:active { transform: scale(0.95); }
 
-        /* BOTTOM BAR */
-        .wp-bottom {
-          position: absolute; bottom: 32px; left: 52px; right: 52px;
-          display: flex; align-items: center; justify-content: space-between;
-        }
-        .wp-dots { display: flex; gap: 8px; align-items: center; }
-        .wp-dot-pip {
-          height: 2px; background: #252018; transition: all 0.35s cubic-bezier(0.22,1,0.36,1);
-          width: 18px; cursor: pointer;
-        }
-        .wp-dot-pip.active { background: #c9a96e; width: 30px; }
-        .wp-arrows { display: flex; gap: 8px; }
-        .wp-arrow-btn {
-          width: 38px; height: 38px; background: transparent;
-          border: 1px solid #252018; color: #5a4a38; cursor: pointer;
-          font-size: 13px; transition: all 0.2s;
-          display: flex; align-items: center; justify-content: center;
-          font-family: 'DM Mono', monospace;
-        }
-        .wp-arrow-btn:hover { border-color: #c9a96e; color: #c9a96e; }
-      `}</style>
+          /* Dots */
+          .w-dots {
+            display: flex; gap: 6px; align-items: center;
+            margin: 0 8px;
+          }
+          .w-dot {
+            width: 4px; height: 4px; border-radius: 50%;
+            background: #2a2520;
+            transition: all 0.3s; cursor: pointer;
+          }
+          .w-dot.active {
+            background: #c9a96e;
+            transform: scale(1.3);
+          }
 
-      <div className="wp-root">
-        {/* ── LEFT: PHOTO ── */}
-        <div className="wp-left">
-          <div
-            className={`wp-img ${exiting ? `out-${exitDir}` : `in-${enterDir}`}`}
-            style={{ backgroundImage: `url(${p.image})` }}
-          />
-          <div className="wp-img-overlay" />
-          <div className={`wp-name-wrap ${exiting ? `out-${exitDir}` : `in-${enterDir}`}`}>
-            <span className="wp-big-name">{p.name}</span>
-            <span className="wp-big-badge">{p.badge}</span>
-          </div>
-        </div>
+          /* Bottom badge */
+          .w-left-badge {
+            position: absolute; bottom: 36px; left: 0; right: 0;
+            text-align: center;
+            font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+            color: #2a2218;
+            animation: wFadeIn 0.6s 0.3s ease both;
+          }
 
-        {/* ── RIGHT: CONTENT ── */}
-        <div className="wp-right">
-          <div className="wp-right-grid" />
-          <div className="wp-right-glow" />
+          /* ── RIGHT PANEL ── */
+          .w-right {
+            position: relative;
+            background: #0e0c09;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 64px 72px;
+          }
 
-          <div className="wp-top-bar">
-            <div className="wp-brand">Arcodic</div>
-            <div className="wp-live"><div className="wp-live-dot" />SOW Portal</div>
-          </div>
+          /* Subtle texture overlay */
+          .w-right::before {
+            content: '';
+            position: absolute; inset: 0; pointer-events: none;
+            background:
+              radial-gradient(ellipse at 20% 20%, rgba(201,169,110,0.03) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 80%, rgba(74,138,122,0.02) 0%, transparent 50%);
+          }
 
-          <div className={`wp-card ${exiting ? `out-${exitDir}` : `in-${enterDir}`}`}>
-            <div className="wp-greeting-label">{p.greeting}</div>
-            <div className={`wp-heading ${p.nameStyle}`}>{p.name}.</div>
-            <p className="wp-sub">{p.sub}</p>
-            {p.joke && <p className="wp-joke">{p.joke}</p>}
-            <div className="wp-divider" />
-            <div className="wp-pw-label">Password</div>
-            <div className={`wp-pw-row ${pwFocused ? `focused-${p.nameStyle}` : ''}`}>
-              <input
-                className="wp-pw-input"
-                type={showPw ? 'text' : 'password'}
-                placeholder="············"
-                value={password}
-                onChange={e => { setPassword(e.target.value); setPwError(''); }}
-                onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                onFocus={() => setPwFocused(true)}
-                onBlur={() => setPwFocused(false)}
-              />
-              <button className="wp-pw-toggle" onMouseDown={e => e.preventDefault()} onClick={() => setShowPw(s => !s)}>
-                {showPw ? 'hide' : 'show'}
-              </button>
+          /* Vertical divider */
+          .w-divider {
+            position: absolute; left: 0; top: 10%; bottom: 10%;
+            width: 1px;
+            background: linear-gradient(to bottom, transparent, rgba(201,169,110,0.08) 30%, rgba(201,169,110,0.08) 70%, transparent);
+          }
+
+          .w-right-inner {
+            position: relative; z-index: 1; width: 100%; max-width: 340px;
+          }
+
+          .w-right-label {
+            font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase;
+            color: #4a4035; margin-bottom: 40px;
+            display: flex; align-items: center; gap: 8px;
+            animation: wSlideUp 0.4s ease both;
+          }
+          .w-right-label::before {
+            content: '';
+            width: 20px; height: 1px; background: #2a2520;
+          }
+
+          .w-right-greeting {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 42px; font-weight: 300; line-height: 1.1;
+            color: #111827; margin-bottom: 8px;
+            animation: wSlideUp 0.4s 0.05s ease both;
+          }
+          .w-right-greeting strong {
+            font-weight: 600;
+            display: block;
+          }
+          .w-right-sub {
+            font-size: 11px; color: #5a5040; line-height: 1.8;
+            margin-bottom: 6px;
+            animation: wSlideUp 0.4s 0.08s ease both;
+          }
+          .w-right-joke {
+            font-size: 10px; color: #3a2e20; font-style: italic;
+            margin-bottom: 0;
+            animation: wSlideUp 0.4s 0.1s ease both;
+          }
+
+          .w-right-divider {
+            width: 32px; height: 1px; background: #252018;
+            margin: 28px 0;
+            animation: wFadeIn 0.4s 0.12s ease both;
+          }
+
+          /* Password */
+          .w-pw-label {
+            font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+            color: #4a4035; margin-bottom: 10px;
+            animation: wSlideUp 0.4s 0.14s ease both;
+          }
+          .w-pw-field {
+            display: flex; align-items: center;
+            border-bottom: 1.5px solid #2a2520;
+            margin-bottom: 6px; transition: border-color 0.2s;
+            animation: wSlideUp 0.4s 0.16s ease both;
+          }
+          .w-pw-field.focused { border-color: #c9a96e; }
+          .w-pw-field.error   { border-color: #c0614a; }
+          .w-pw-input {
+            flex: 1; background: transparent; border: none; outline: none;
+            font-family: 'DM Mono', monospace; font-size: 18px;
+            color: #d4c5a8; padding: 10px 0; letter-spacing: 0.1em;
+          }
+          .w-pw-input::placeholder { color: #2a2520; font-size: 22px; letter-spacing: 0.15em; }
+          .w-pw-toggle {
+            background: none; border: none; cursor: pointer;
+            font-family: 'DM Mono', monospace; font-size: 9px;
+            letter-spacing: 0.12em; text-transform: uppercase;
+            color: #3a3028; padding: 10px 0 10px 12px; transition: color 0.2s;
+          }
+          .w-pw-toggle:hover { color: #8a7250; }
+          .w-pw-error {
+            font-size: 10px; color: #c0614a; min-height: 18px;
+            margin-bottom: 24px; letter-spacing: 0.04em;
+          }
+          .w-pw-error.shake { animation: wShake 0.4s ease; }
+          .w-pw-spacer { height: 42px; }
+
+          /* Button */
+          .w-btn {
+            width: 100%; padding: 16px;
+            border: none; cursor: pointer;
+            font-family: 'DM Mono', monospace; font-size: 10px;
+            font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase;
+            transition: all 0.2s; display: flex; align-items: center;
+            justify-content: center; gap: 10px;
+            animation: wSlideUp 0.4s 0.2s ease both;
+          }
+          .w-btn-gold {
+            background: #c9a96e; color: #080705;
+          }
+          .w-btn-gold:hover { background: #ddb97e; }
+          .w-btn-teal {
+            background: #4a8a7a; color: #080705;
+          }
+          .w-btn-teal:hover { background: #5aaa9a; }
+          .w-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+          .w-btn:not(:disabled):active { transform: scale(0.99); }
+
+          /* Progress bar under button */
+          .w-btn-bar {
+            height: 2px; margin-top: 12px; background: #1a1610;
+            overflow: hidden;
+            animation: wFadeIn 0.4s 0.22s ease both;
+          }
+          .w-btn-bar-fill {
+            height: 100%; width: 0%;
+            transition: width 0.3s ease, background 0.3s ease;
+          }
+          .w-btn-bar-fill.has-value { width: 100%; background: #c9a96e; }
+          .w-btn-bar-fill.teal.has-value { background: #4a8a7a; }
+
+          /* Footer */
+          .w-right-footer {
+            position: absolute; bottom: 32px; left: 72px; right: 72px;
+            display: flex; justify-content: space-between; align-items: center;
+          }
+          .w-right-footer-brand {
+            font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
+            color: #2a2218;
+          }
+          .w-right-footer-live {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 9px; letter-spacing: 0.12em; color: #2a2218;
+          }
+          .w-live-dot {
+            width: 5px; height: 5px; border-radius: 50%; background: #10b981;
+            animation: wPulse 2s infinite;
+          }
+        `}</style>
+
+        <div className="w-root">
+
+          {/* ── LEFT: 3D CAROUSEL ── */}
+          <div className="w-left">
+            <div className="w-left-grid" />
+            <div className="w-left-glow" />
+            <div className="w-brand">Arcodic</div>
+
+            <div className="w-carousel">
+              {/* Left avatar (prev) */}
+              <div
+                className="w-avatar w-avatar-left"
+                onClick={() => handleGoTo('left')}
+              >
+                {prev.image
+                  ? <img src={prev.image} alt={prev.name} />
+                  : <div className="w-avatar-placeholder">{prev.name[0]}</div>
+                }
+              </div>
+
+              {/* Center active avatar */}
+              <div className="w-avatar w-avatar-active">
+                {active.image
+                  ? <img src={active.image} alt={active.name} key={active.id} style={{animation:'wAvatarIn 0.35s ease both'}} />
+                  : <div className="w-avatar-placeholder">{active.name[0]}</div>
+                }
+              </div>
+
+              {/* Right avatar (next) */}
+              <div
+                className="w-avatar w-avatar-right"
+                onClick={() => handleGoTo('right')}
+              >
+                {next.image
+                  ? <img src={next.image} alt={next.name} />
+                  : <div className="w-avatar-placeholder">{next.name[0]}</div>
+                }
+              </div>
             </div>
-            {pwError
-              ? <div className="wp-pw-error shake">{pwError}</div>
-              : <div className="wp-pw-spacer" />
-            }
-            <button
-              className={`wp-btn ${p.btnClass}`}
-              onClick={handleLogin}
-              disabled={!password.trim()}
-            >{p.btnText} →</button>
+
+            {/* Name + title */}
+            <div className="w-profile-info" key={active.id + '-info'}>
+              <div className="w-profile-name">{active.name}</div>
+              <div className="w-profile-title">{active.title}</div>
+            </div>
+
+            {/* Arrows + dots */}
+            <div className="w-arrows">
+              <button className="w-arrow" onClick={() => handleGoTo('left')}>←</button>
+              <div className="w-dots">
+                {PROFILES.map((_, i) => (
+                  <div
+                    key={i}
+                    className={`w-dot ${i === activeProfile ? 'active' : ''}`}
+                    onClick={() => !exiting && i !== activeProfile && handleGoTo(i > activeProfile ? 'right' : 'left')}
+                  />
+                ))}
+              </div>
+              <button className="w-arrow" onClick={() => handleGoTo('right')}>→</button>
+            </div>
+
+            <div className="w-left-badge">SOW Portal · Internal Access Only</div>
           </div>
 
-          <div className="wp-bottom">
-            <div className="wp-dots">
-              {PROFILES.map((_, i) => (
-                <div
-                  key={i}
-                  className={`wp-dot-pip ${i === activeProfile ? 'active' : ''}`}
-                  onClick={() => !exiting && handleGoTo(i > activeProfile ? 'right' : 'left')}
+          {/* ── RIGHT: PASSWORD ── */}
+          <div className="w-right">
+            <div className="w-divider" />
+
+            <div className="w-right-inner" key={active.id + '-right'}>
+              <div className="w-right-label">Secure Access</div>
+
+              <div className="w-right-greeting">
+                {active.greeting}
+                <strong style={{color: active.color === '#c9a96e' ? '#c9a96e' : '#4a8a7a'}}>
+                  {active.name}.
+                </strong>
+              </div>
+              <p className="w-right-sub">{active.sub}</p>
+              {active.joke && <p className="w-right-joke">{active.joke}</p>}
+
+              <div className="w-right-divider" />
+
+              <div className="w-pw-label">Password</div>
+              <div className={`w-pw-field ${pwFocused ? 'focused' : ''} ${pwError ? 'error' : ''}`}>
+                <input
+                  className="w-pw-input"
+                  type={showPw ? 'text' : 'password'}
+                  placeholder="• • • • • • • •"
+                  value={password}
+                  onChange={e => { setPassword(e.target.value); setPwError(''); }}
+                  onKeyDown={e => e.key === 'Enter' && password.trim() && handleLogin()}
+                  onFocus={() => setPwFocused(true)}
+                  onBlur={() => setPwFocused(false)}
+                  autoFocus
                 />
-              ))}
+                <button
+                  className="w-pw-toggle"
+                  onMouseDown={e => e.preventDefault()}
+                  onClick={() => setShowPw(s => !s)}
+                >
+                  {showPw ? 'hide' : 'show'}
+                </button>
+              </div>
+
+              {pwError
+                ? <div className="w-pw-error shake">{pwError}</div>
+                : <div className="w-pw-spacer" />
+              }
+
+              <button
+                className={`w-btn ${active.id === 'rudz' ? 'w-btn-gold' : 'w-btn-teal'}`}
+                onClick={handleLogin}
+                disabled={!password.trim()}
+              >
+                {active.btnText} →
+              </button>
+
+              <div className="w-btn-bar">
+                <div className={`w-btn-bar-fill ${active.id === 'kaleb' ? 'teal' : ''} ${password.trim() ? 'has-value' : ''}`} />
+              </div>
             </div>
-            <div className="wp-arrows">
-              <button className="wp-arrow-btn" onClick={() => !exiting && handleGoTo('left')}>←</button>
-              <button className="wp-arrow-btn" onClick={() => !exiting && handleGoTo('right')}>→</button>
+
+            <div className="w-right-footer">
+              <div className="w-right-footer-brand">Arcodic · Digital</div>
+              <div className="w-right-footer-live">
+                <div className="w-live-dot" />
+                Live
+              </div>
             </div>
           </div>
+
         </div>
-      </div>
-    </>
+      </>
     );
+  }
+
   }
 
   return (
