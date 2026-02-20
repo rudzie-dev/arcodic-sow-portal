@@ -230,6 +230,9 @@ export default function App() {
   const [arcSig, setArcSig] = useState('');
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [sowId, setSowId] = useState(() => localStorage.getItem('arcodic_sow_id'));
+  const [clientSig, setClientSig] = useState(null);
+  const [clientSignedAt, setClientSignedAt] = useState(null);
   const [sendError, setSendError] = useState('');
   const [showSendModal, setShowSendModal] = useState(false);
   const [clientEmailInput, setClientEmailInput] = useState('');
@@ -259,6 +262,8 @@ export default function App() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
+      setSowId(json.sow_id);
+      localStorage.setItem('arcodic_sow_id', json.sow_id);
       setSent(true); setShowSendModal(false);
     } catch (err) {
       setSendError(err.message);
@@ -272,6 +277,30 @@ export default function App() {
     window.addEventListener('scroll', handler);
     return () => window.removeEventListener('scroll', handler);
   }, []);
+
+  // Poll Supabase for client signature completion
+  useEffect(() => {
+    if (!sowId) return;
+    const SUPABASE_URL = 'https://ctjwqktzdvbfijoqnxvo.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0andxa3R6ZHZiZmlqb3FueHZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0ODY3MDksImV4cCI6MjA4NzA2MjcwOX0.3UBqBBNiWRiTVDarLcTgVtJSZasVRBJTRNuXpR3mEXo';
+    const poll = async () => {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/sows?id=eq.${sowId}&select=status,client_signature,client_signed_at,client_name`, {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+        });
+        const rows = await res.json();
+        if (rows?.[0]?.status === 'completed') {
+          setClientSig(rows[0].client_signature);
+          setClientSignedAt(rows[0].client_signed_at);
+          setSent(true);
+          clearInterval(timer);
+        }
+      } catch(e) {}
+    };
+    poll(); // check immediately on load
+    const timer = setInterval(poll, 10000); // then every 10s
+    return () => clearInterval(timer);
+  }, [sowId]);
 
   const set = (path, value) => {
     const keys = path.split('.');
@@ -1456,26 +1485,42 @@ export default function App() {
                   onChange={setArcSig}
                   locked={sent}
                 />
-                <div className="sig-pad print-hide" style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16, background:'rgba(201,169,110,0.03)', border:'1px dashed var(--border)' }}>
-                  <div style={{ fontSize:11, color:'var(--muted)', textAlign:'center', letterSpacing:'0.05em' }}>
-                    {sent ? '✓ Signing link sent to client' : 'Client will sign via their unique link'}
+                {clientSig ? (
+                  <TypeSignPad
+                    label="CLIENT"
+                    signatory={data.client.name}
+                    date={clientSignedAt ? new Date(clientSignedAt).toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' }) : today}
+                    value={clientSig}
+                    onChange={() => {}}
+                    locked={true}
+                  />
+                ) : (
+                  <div className="sig-pad print-hide" style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16, background:'rgba(201,169,110,0.03)', border:'1px dashed var(--border)' }}>
+                    <div style={{ fontSize:11, color:'var(--muted)', textAlign:'center', letterSpacing:'0.05em' }}>
+                      {sent ? '✓ Signing link sent to client' : 'Client will sign via their unique link'}
+                    </div>
+                    {!sent && (
+                      <button
+                        onClick={() => { setSendError(''); setShowSendModal(true); }}
+                        style={{
+                          background: arcSig.trim() ? 'var(--gold)' : 'var(--border)',
+                          color: arcSig.trim() ? 'var(--bg)' : 'var(--muted)',
+                          border:'none', padding:'12px 28px',
+                          cursor: arcSig.trim() ? 'pointer' : 'not-allowed',
+                          fontFamily:"'DM Mono', monospace", fontSize:11,
+                          fontWeight:500, letterSpacing:'0.12em', textTransform:'uppercase',
+                          transition:'all 0.2s',
+                        }}
+                      >Send to Client →</button>
+                    )}
+                    {sent && (
+                      <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
+                        <div style={{ fontSize:10, color:'#4a9b6f', letterSpacing:'0.08em' }}>Awaiting client signature</div>
+                        <div style={{ fontSize:9, color:'var(--muted)', letterSpacing:'0.06em' }}>Auto-refreshing every 10s…</div>
+                      </div>
+                    )}
                   </div>
-                  {!sent && (
-                    <button
-                      onClick={() => { setSendError(''); setShowSendModal(true); }}
-                      style={{
-                        background: arcSig.trim() ? 'var(--gold)' : 'var(--border)',
-                        color: arcSig.trim() ? 'var(--bg)' : 'var(--muted)',
-                        border:'none', padding:'12px 28px',
-                        cursor: arcSig.trim() ? 'pointer' : 'not-allowed',
-                        fontFamily:"'DM Mono', monospace", fontSize:11,
-                        fontWeight:500, letterSpacing:'0.12em', textTransform:'uppercase',
-                        transition:'all 0.2s',
-                      }}
-                    >Send to Client →</button>
-                  )}
-                  {sent && <div style={{ fontSize:10, color:'#4a9b6f', letterSpacing:'0.08em' }}>Awaiting client signature</div>}
-                </div>
+                )}
                 {/* Print placeholder for client sig */}
                 <div className="sig-pad" style={{ display:'none' }}>
                   <span className="sig-label">CLIENT</span>
