@@ -62,14 +62,14 @@ export default async function handler(req, res) {
 
     await Promise.all([
       resend.emails.send({
-        from: 'ARCODIC <onboarding@resend.dev>',
+        from: 'ARCODIC <hello@arcodic.com>',
         to: sow.client_email,
         subject: `Signed — Statement of Work: ${sow.data?.project?.title}`,
         html: completionHtml(sow.client_name),
       }),
       resend.emails.send({
-        from: 'ARCODIC <onboarding@resend.dev>',
-        to: 'thenewrudz@gmail.com',
+        from: 'ARCODIC <hello@arcodic.com>',
+        to: 'rudz.dev@gmail.com',
         subject: `Client Signed — ${sow.client_name}: ${sow.data?.project?.title}`,
         html: completionHtml('ARCODIC Team'),
       }),

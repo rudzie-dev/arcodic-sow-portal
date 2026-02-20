@@ -40,7 +40,7 @@ export default async function handler(req, res) {
     const signingLink = `https://arcodic-sow-portal.vercel.app/sign/${tokenRow.token}`;
 
     await resend.emails.send({
-      from: 'ARCODIC <onboarding@resend.dev>',
+      from: 'ARCODIC <hello@arcodic.com>',
       to: client_email,
       subject: `Action Required: Please sign your Statement of Work`,
       html: `
