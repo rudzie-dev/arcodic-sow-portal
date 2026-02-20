@@ -38,25 +38,80 @@ export default async function handler(req, res) {
       year: 'numeric', month: 'long', day: 'numeric'
     });
 
+    const arcSignedAt = sow.arcodic_signed_at
+      ? new Date(sow.arcodic_signed_at).toLocaleDateString('en-ZA', { year: 'numeric', month: 'long', day: 'numeric' })
+      : signedAt;
+
     const completionHtml = (recipientName) => `
-      <div style="font-family: monospace; max-width: 600px; margin: 0 auto; padding: 40px; background: #0a0906; color: #d4c5a8;">
-        <h1 style="font-size: 28px; color: #c9a96e; margin-bottom: 8px;">ARCODIC</h1>
-        <p style="color: #6b6050; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 40px;">Statement of Work — Fully Executed</p>
-        <p style="margin-bottom: 16px;">Hi ${recipientName},</p>
-        <p style="margin-bottom: 8px; color: #8a7d6b;">
-          Great news — the Statement of Work for <strong style="color: #d4c5a8;">${sow.data?.project?.title || 'your project'}</strong> 
-          has been signed by both parties.
-        </p>
-        <p style="margin-bottom: 32px; color: #6b6050; font-size: 11px;">Completed on ${signedAt}</p>
-        <div style="background: #16130e; border: 1px solid #2a2520; padding: 24px; margin-bottom: 32px;">
-          <p style="font-size: 10px; color: #6b6050; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 12px;">Agreement Summary</p>
-          <p style="margin-bottom: 4px;">Client: <span style="color: #c9a96e;">${sow.client_name}</span></p>
-          <p style="margin-bottom: 4px;">Project: <span style="color: #c9a96e;">${sow.data?.project?.title}</span></p>
-          <p>Total Value: <span style="color: #c9a96e;">${sow.data?.pricing?.currency} ${sow.data?.pricing?.total}</span></p>
+      <div style="font-family: monospace; max-width: 620px; margin: 0 auto; padding: 48px 40px; background: #0a0906; color: #d4c5a8;">
+
+        <!-- Header -->
+        <div style="margin-bottom: 40px; padding-bottom: 24px; border-bottom: 1px solid #1e1a14;">
+          <p style="font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #4a4035; margin-bottom: 6px;">ARCODIC · Digital Service Provider</p>
+          <h1 style="font-size: 32px; color: #c9a96e; font-weight: 700; margin: 0; letter-spacing: -0.01em;">Statement of Work</h1>
+          <p style="font-size: 11px; color: #4a9b6f; letter-spacing: 0.12em; text-transform: uppercase; margin-top: 6px;">✓ Fully Executed</p>
         </div>
-        <p style="font-size: 11px; color: #6b6050;">Please retain this email as your record of execution.</p>
-        <hr style="border-color: #2a2520; margin: 32px 0;" />
-        <p style="font-size: 10px; color: #4a4035;">ARCODIC Digital Service Provider</p>
+
+        <!-- Greeting -->
+        <p style="margin-bottom: 8px; font-size: 13px;">Hi ${recipientName},</p>
+        <p style="margin-bottom: 32px; color: #8a7d6b; font-size: 12px; line-height: 1.8;">
+          The Statement of Work for <strong style="color: #d4c5a8;">${sow.data?.project?.title || 'your project'}</strong>
+          has been signed by both parties and is now fully executed.
+        </p>
+
+        <!-- Agreement Summary -->
+        <div style="background: #111008; border: 1px solid #2a2520; padding: 24px; margin-bottom: 32px;">
+          <p style="font-size: 9px; color: #4a4035; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 16px;">Agreement Summary</p>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="font-size: 10px; color: #6b6050; padding: 6px 0; width: 40%;">Client</td>
+              <td style="font-size: 11px; color: #d4c5a8; padding: 6px 0;">${sow.client_name}</td>
+            </tr>
+            <tr>
+              <td style="font-size: 10px; color: #6b6050; padding: 6px 0;">Project</td>
+              <td style="font-size: 11px; color: #d4c5a8; padding: 6px 0;">${sow.data?.project?.title || '—'}</td>
+            </tr>
+            <tr>
+              <td style="font-size: 10px; color: #6b6050; padding: 6px 0;">Total Value</td>
+              <td style="font-size: 11px; color: #c9a96e; padding: 6px 0;">${sow.data?.pricing?.currency || ''} ${sow.data?.pricing?.total || '—'}</td>
+            </tr>
+            <tr>
+              <td style="font-size: 10px; color: #6b6050; padding: 6px 0;">Completed</td>
+              <td style="font-size: 11px; color: #d4c5a8; padding: 6px 0;">${signedAt}</td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- Signatures -->
+        <div style="margin-bottom: 32px;">
+          <p style="font-size: 9px; color: #4a4035; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 16px;">Signatures</p>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+
+            <!-- ARCODIC sig -->
+            <div style="background: #111008; border: 1px solid #2a2520; padding: 20px;">
+              <p style="font-size: 9px; color: #4a4035; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 12px;">ARCODIC</p>
+              <p style="font-size: 22px; font-family: Georgia, serif; font-style: italic; color: #c9a96e; margin-bottom: 8px; letter-spacing: -0.02em;">${sow.arcodic_signature || 'A. Arcodic'}</p>
+              <p style="font-size: 9px; color: #6b6050;">Signed ${arcSignedAt}</p>
+            </div>
+
+            <!-- Client sig -->
+            <div style="background: #111008; border: 1px solid #2a2520; padding: 20px;">
+              <p style="font-size: 9px; color: #4a4035; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 12px;">CLIENT</p>
+              <p style="font-size: 22px; font-family: Georgia, serif; font-style: italic; color: #d4c5a8; margin-bottom: 8px; letter-spacing: -0.02em;">${client_signature}</p>
+              <p style="font-size: 9px; color: #6b6050;">Signed ${signedAt}</p>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="padding-top: 24px; border-top: 1px solid #1e1a14;">
+          <p style="font-size: 10px; color: #4a4035; line-height: 1.8;">
+            Please retain this email as your legally binding record of execution.<br/>
+            Both parties have agreed to the terms outlined in the Statement of Work.
+          </p>
+        </div>
+
       </div>
     `;
 

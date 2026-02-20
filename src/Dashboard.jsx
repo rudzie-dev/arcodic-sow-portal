@@ -6,7 +6,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 const fetchSOWs = async () => {
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/sows?select=id,created_at,status,client_name,client_email,data,arcodic_signed_at,client_signed_at&order=created_at.desc`,
+    `${SUPABASE_URL}/rest/v1/sows?select=id,created_at,status,client_name,client_email,data,arcodic_signed_at,client_signed_at,arcodic_signature,client_signature&order=created_at.desc`,
     { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
   );
   if (!res.ok) throw new Error('Failed to fetch');
@@ -373,7 +373,7 @@ export default function Dashboard() {
                   <th>Value</th>
                   <th>Status</th>
                   <th>Sent</th>
-                  <th>Signed</th>
+                  <th>Client Signed</th>
                   <th></th>
                 </tr>
               </thead>
@@ -414,7 +414,16 @@ export default function Dashboard() {
                         </div>
                       </td>
                       <td className="db-td">{fmt(sow.arcodic_signed_at)}</td>
-                      <td className="db-td">{fmt(sow.client_signed_at)}</td>
+                      <td className="db-td">
+                        {sow.status === 'completed' ? (
+                          <div>
+                            <div style={{color:'#4a9b6f', fontSize:11}}>{sow.client_name}</div>
+                            <div style={{fontSize:9, color:'#3a3028', marginTop:2}}>{fmt(sow.client_signed_at)}</div>
+                          </div>
+                        ) : (
+                          <span style={{color:'#2a2520'}}>—</span>
+                        )}
+                      </td>
                       <td className="db-td">
                         <div className="db-row-action">
                           {sow.status === 'completed' && (
