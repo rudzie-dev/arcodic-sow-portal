@@ -171,7 +171,7 @@ const ScopeColumn = ({ icon: Icon, label, accent, items, onAdd, onRemove, onEdit
    SUPABASE (anon, read-only polling)
 ───────────────────────────────────────────── */
 const SUPABASE_URL  = 'https://ctjwqktzdvbfijoqnxvo.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0andxa3R6ZHZiZmlqb3FueHZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0ODY3MDksImV4cCI6MjA4NzA2MjcwOX0.3UBqBBNiWRiTVDarLcTgVtJSZasVRBJTRNuXpR3mEXo';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0andxa3R6ZHZiZmlqb3FueHZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0ODY3MDksImV4cCI6MjA4NzA2MjcwOX0.ng2Ek0nFDteMqsQM-Or-TCBkp424uyCKbWjNbJ7MpUo';
 
 /* ─────────────────────────────────────────────
    BLANK FORM
