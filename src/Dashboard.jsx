@@ -1,15 +1,39 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const SUPABASE_URL = 'https://ctjwqktzdvbfijoqnxvo.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0andxa3R6ZHZiZmlqb3FueHZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0ODY3MDksImV4cCI6MjA4NzA2MjcwOX0.ng2Ek0nFDteMqsQM-Or-TCBkp424uyCKbWjNbJ7MpUo';
+
+// FIX #8: complete symbol map for all 20 currencies defined in App.jsx
+const CURRENCY_SYMBOLS = {
+  USD: '$',
+  EUR: '€',
+  GBP: '£',
+  AED: 'د.إ',
+  SAR: '﷼',
+  QAR: 'ر.ق',
+  CAD: 'C$',
+  AUD: 'A$',
+  CHF: 'Fr',
+  JPY: '¥',
+  CNY: '¥',
+  INR: '₹',
+  ZAR: 'R',
+  NGN: '₦',
+  EGP: 'E£',
+  TRY: '₺',
+  BRL: 'R$',
+  MXN: 'MX$',
+  SGD: 'S$',
+  KWD: 'د.ك',
+};
 
 const fetchSOWs = async () => {
   const res = await fetch(
     `${SUPABASE_URL}/rest/v1/sows?select=id,created_at,status,client_name,client_email,data,arcodic_signed_at,client_signed_at,arcodic_signature,client_signature&order=created_at.desc`,
     { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
   );
-  if (!res.ok) throw new Error('Failed to fetch');
+  if (!res.ok) throw new Error(`Failed to fetch: HTTP ${res.status}`);
   return res.json();
 };
 
@@ -29,38 +53,42 @@ const fmtLong = (iso) => {
   return new Date(iso).toLocaleDateString('en-ZA', { day:'numeric', month:'long', year:'numeric' });
 };
 
+// FIX #8: use complete symbol map with a safe fallback
 const currency = (data) => {
-  const map = { ZAR:'R', USD:'$', EUR:'€', GBP:'£', AED:'د.إ' };
-  const c = data?.pricing?.currency || 'ZAR';
-  return (map[c] || c) + ' ' + (data?.pricing?.total || '—');
+  const code   = data?.pricing?.currency || 'ZAR';
+  const symbol = CURRENCY_SYMBOLS[code] || code;
+  return `${symbol} ${data?.pricing?.total || '—'}`;
 };
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [sows, setSows]       = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState(null);
-  const [filter, setFilter]   = useState('all');
-  const [search, setSearch]   = useState('');
-  const [expanded, setExpanded] = useState(null); // sow.id that is expanded
+  const [sows,     setSows]     = useState([]);
+  const [loading,  setLoading]  = useState(true);
+  const [error,    setError]    = useState(null);
+  const [filter,   setFilter]   = useState('all');
+  const [search,   setSearch]   = useState('');
+  const [expanded, setExpanded] = useState(null);
 
-  const load = async () => {
+  // FIX #11: useCallback ensures the stable reference used by both
+  // useEffects is the same function, preventing stale closures
+  const load = useCallback(async () => {
     try {
       const data = await fetchSOWs();
       setSows(data);
       setError(null);
-    } catch(e) {
+    } catch (e) {
       setError(e.message);
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => { load(); }, []);
-  useEffect(() => {
-    const t = setInterval(() => load(), 15000);
-    return () => clearInterval(t);
   }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    const t = setInterval(load, 15000);
+    return () => clearInterval(t);
+  }, [load]);
 
   const filtered = sows.filter(s => {
     const matchFilter = filter === 'all' || s.status === filter;
@@ -232,7 +260,11 @@ export default function Dashboard() {
         {/* TABLE */}
         <div className="db-table-wrap">
           {error ? (
-            <div className="db-empty"><div className="db-empty-icon">⚠</div><div className="db-empty-title">Failed to load</div><div className="db-empty-sub">{error}</div></div>
+            <div className="db-empty">
+              <div className="db-empty-icon">⚠</div>
+              <div className="db-empty-title">Failed to load</div>
+              <div className="db-empty-sub">{error}</div>
+            </div>
           ) : loading ? (
             <table className="db-table"><tbody>{[...Array(5)].map((_,i) => (
               <tr key={i} className="db-row">{[260,180,120,80,100,80].map((w,j) => (
@@ -240,7 +272,11 @@ export default function Dashboard() {
               ))}</tr>
             ))}</tbody></table>
           ) : filtered.length === 0 ? (
-            <div className="db-empty"><div className="db-empty-icon">◌</div><div className="db-empty-title">No SOWs found</div><div className="db-empty-sub">{search ? 'Try a different search' : 'Create your first SOW to get started'}</div></div>
+            <div className="db-empty">
+              <div className="db-empty-icon">◌</div>
+              <div className="db-empty-title">No SOWs found</div>
+              <div className="db-empty-sub">{search ? 'Try a different search' : 'Create your first SOW to get started'}</div>
+            </div>
           ) : (
             <table className="db-table">
               <thead className="db-thead">
@@ -256,7 +292,7 @@ export default function Dashboard() {
               </thead>
               <tbody>
                 {filtered.map((sow, idx) => {
-                  const st = STATUS[sow.status] || STATUS.draft;
+                  const st         = STATUS[sow.status] || STATUS.draft;
                   const isExpanded = expanded === sow.id;
                   return (
                     <React.Fragment key={sow.id}>
@@ -305,7 +341,11 @@ export default function Dashboard() {
                                 </button>
                                 <button
                                   className="db-act-btn primary"
-                                  onClick={e => { e.stopPropagation(); localStorage.setItem('arcodic_sow_id', sow.id); navigate('/?sow=' + sow.id); }}
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    localStorage.setItem('arcodic_sow_id', sow.id);
+                                    navigate('/?sow=' + sow.id);
+                                  }}
                                 >Print</button>
                               </>
                             )}
@@ -313,7 +353,14 @@ export default function Dashboard() {
                               <button className="db-act-btn" style={{ cursor:'default', opacity:0.5 }}>◎ Awaiting</button>
                             )}
                             {sow.status === 'draft' && (
-                              <button className="db-act-btn primary" onClick={e => { e.stopPropagation(); navigate('/'); }}>Begin →</button>
+                              // FIX #6 (draft resume): pass the sow ID so App.jsx can load the data
+                              <button
+                                className="db-act-btn primary"
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  navigate('/?edit=' + sow.id);
+                                }}
+                              >Resume →</button>
                             )}
                           </div>
                         </td>

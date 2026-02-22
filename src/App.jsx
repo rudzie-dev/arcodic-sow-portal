@@ -7,6 +7,54 @@ import {
 } from 'lucide-react';
 
 /* ─────────────────────────────────────────────
+   SUPABASE CONFIG
+   NOTE: The anon key stays here (it's public by design).
+   Security comes from Row Level Security policies in Supabase.
+   Passwords are now verified server-side via Supabase Auth —
+   never stored in this file.
+───────────────────────────────────────────── */
+const SUPABASE_URL  = 'https://ctjwqktzdvbfijoqnxvo.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0andxa3R6ZHZiZmlqb3FueHZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0ODY3MDksImV4cCI6MjA4NzA2MjcwOX0.ng2Ek0nFDteMqsQM-Or-TCBkp424uyCKbWjNbJ7MpUo';
+
+/* ─────────────────────────────────────────────
+   AUTH HELPERS
+   Passwords live only in Supabase Auth — not here.
+   Setup: Create users in Supabase Dashboard → Authentication → Users
+   e.g.  rudz@arcodic.com  and  kaleb@arcodic.com
+───────────────────────────────────────────── */
+const supabaseLogin = async (email, password) => {
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON },
+    body: JSON.stringify({ email, password }),
+  });
+  const body = await res.json();
+  if (!res.ok) throw new Error(body.error_description || 'Incorrect password.');
+  return body; // { access_token, expires_in, ... }
+};
+
+const saveSession = (accessToken, expiresIn, profileId) => {
+  localStorage.setItem('arcodic_auth', JSON.stringify({
+    access_token: accessToken,
+    profile_id:   profileId,
+    expires_at:   Date.now() + expiresIn * 1000,
+  }));
+};
+
+const getSession = () => {
+  try {
+    const s = JSON.parse(localStorage.getItem('arcodic_auth') || 'null');
+    if (!s || s.expires_at < Date.now()) {
+      localStorage.removeItem('arcodic_auth');
+      return null;
+    }
+    return s;
+  } catch { return null; }
+};
+
+const getAccessToken = () => getSession()?.access_token || SUPABASE_ANON;
+
+/* ─────────────────────────────────────────────
    CURRENCIES
 ───────────────────────────────────────────── */
 const CURRENCIES = [
@@ -32,7 +80,11 @@ const CURRENCIES = [
   { code: 'KWD', symbol: 'د.ك', name: 'Kuwaiti Dinar'      },
 ];
 
-const getCurrency = (code) => CURRENCIES.find(c => c.code === code) || CURRENCIES[12];
+// FIX #7: fallback by code string, not array index
+const getCurrency = (code) =>
+  CURRENCIES.find(c => c.code === code) ||
+  CURRENCIES.find(c => c.code === 'ZAR') ||
+  CURRENCIES[0];
 
 /* ─────────────────────────────────────────────
    CURRENCY SELECT
@@ -79,6 +131,9 @@ const CurrencySelect = ({ value, onChange }) => {
 
 /* ─────────────────────────────────────────────
    TYPE SIGN PAD
+   FIX #5: fontIdx and onFontChange are now props
+   (lifted to App state) so the chosen font persists
+   and isn't reset on re-render.
 ───────────────────────────────────────────── */
 const SIG_FONTS = [
   { name: 'Cormorant', style: "'Cormorant Garamond', serif" },
@@ -88,55 +143,52 @@ const SIG_FONTS = [
   { name: 'Pacifico',  style: "'Pacifico', cursive"         },
 ];
 
-const TypeSignPad = ({ label, signatory, date, value, onChange, locked = false }) => {
-  const [fontIdx, setFontIdx] = useState(0);
-  return (
-    <div className="sig-pad">
-      <span className="sig-label">{label}</span>
-      {!locked && (
-        <div style={{ display:'flex', gap:8, marginBottom:12 }}>
-          {SIG_FONTS.map((f, i) => (
-            <button key={i} onClick={() => setFontIdx(i)} className="print-hide" style={{
-              background: fontIdx === i ? 'rgba(201,169,110,0.15)' : 'transparent',
-              border: `1px solid ${fontIdx === i ? 'var(--gold)' : 'var(--border)'}`,
-              color: fontIdx === i ? 'var(--gold)' : 'var(--muted)',
-              padding:'4px 10px', cursor:'pointer', fontSize:10,
-              letterSpacing:'0.05em', transition:'all 0.15s', fontFamily:'inherit',
-            }}>{f.name}</button>
-          ))}
-        </div>
-      )}
-      <div style={{ position:'relative', marginBottom:16 }}>
-        {locked ? (
-          <div style={{
-            minHeight:72, display:'flex', alignItems:'center',
-            borderBottom:'1px solid var(--border)',
-            fontFamily: SIG_FONTS[fontIdx].style,
-            fontSize:40, color:'var(--cream)', paddingBottom:8,
-          }}>{value || <span style={{ color:'var(--muted)', fontSize:14, fontFamily:'inherit' }}>Not yet signed</span>}</div>
-        ) : (
-          <input
-            type="text"
-            placeholder="Type your full name to sign…"
-            value={value}
-            onChange={e => onChange(e.target.value)}
-            className="sig-type-input"
-            style={{ fontFamily: SIG_FONTS[fontIdx].style }}
-          />
-        )}
+const TypeSignPad = ({ label, signatory, date, value, onChange, fontIdx = 0, onFontChange, locked = false }) => (
+  <div className="sig-pad">
+    <span className="sig-label">{label}</span>
+    {!locked && (
+      <div style={{ display:'flex', gap:8, marginBottom:12 }}>
+        {SIG_FONTS.map((f, i) => (
+          <button key={i} onClick={() => onFontChange?.(i)} className="print-hide" style={{
+            background: fontIdx === i ? 'rgba(201,169,110,0.15)' : 'transparent',
+            border: `1px solid ${fontIdx === i ? 'var(--gold)' : 'var(--border)'}`,
+            color: fontIdx === i ? 'var(--gold)' : 'var(--muted)',
+            padding:'4px 10px', cursor:'pointer', fontSize:10,
+            letterSpacing:'0.05em', transition:'all 0.15s', fontFamily:'inherit',
+          }}>{f.name}</button>
+        ))}
       </div>
-      <div className="sig-meta">
-        <div><div className="meta-key">Signatory</div><div className="meta-val">{signatory}</div></div>
-        <div><div className="meta-key">Date</div><div className="meta-val">{date}</div></div>
-      </div>
-      {locked && (
-        <div style={{ marginTop:10, display:'flex', alignItems:'center', gap:6, fontSize:10, color:'#4a9b6f' }}>
-          <CheckCircle2 size={12} /> Signed & locked
-        </div>
+    )}
+    <div style={{ position:'relative', marginBottom:16 }}>
+      {locked ? (
+        <div style={{
+          minHeight:72, display:'flex', alignItems:'center',
+          borderBottom:'1px solid var(--border)',
+          fontFamily: SIG_FONTS[fontIdx]?.style ?? SIG_FONTS[0].style,
+          fontSize:40, color:'var(--cream)', paddingBottom:8,
+        }}>{value || <span style={{ color:'var(--muted)', fontSize:14, fontFamily:'inherit' }}>Not yet signed</span>}</div>
+      ) : (
+        <input
+          type="text"
+          placeholder="Type your full name to sign…"
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          className="sig-type-input"
+          style={{ fontFamily: SIG_FONTS[fontIdx]?.style ?? SIG_FONTS[0].style }}
+        />
       )}
     </div>
-  );
-};
+    <div className="sig-meta">
+      <div><div className="meta-key">Signatory</div><div className="meta-val">{signatory}</div></div>
+      <div><div className="meta-key">Date</div><div className="meta-val">{date}</div></div>
+    </div>
+    {locked && (
+      <div style={{ marginTop:10, display:'flex', alignItems:'center', gap:6, fontSize:10, color:'#4a9b6f' }}>
+        <CheckCircle2 size={12} /> Signed & locked
+      </div>
+    )}
+  </div>
+);
 
 /* ─────────────────────────────────────────────
    EDITABLE FIELD
@@ -168,21 +220,51 @@ const ScopeColumn = ({ icon: Icon, label, accent, items, onAdd, onRemove, onEdit
 );
 
 /* ─────────────────────────────────────────────
-   SUPABASE (anon, read-only polling)
+   BLANK FORM FACTORY
+   FIX #3: This is now a function so that every call
+   to createBlankForm() captures the *current* date,
+   not the date when the module first loaded.
 ───────────────────────────────────────────── */
-const SUPABASE_URL  = 'https://ctjwqktzdvbfijoqnxvo.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0andxa3R6ZHZiZmlqb3FueHZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0ODY3MDksImV4cCI6MjA4NzA2MjcwOX0.ng2Ek0nFDteMqsQM-Or-TCBkp424uyCKbWjNbJ7MpUo';
-
-/* ─────────────────────────────────────────────
-   BLANK FORM
-───────────────────────────────────────────── */
-const BLANK_FORM = {
+const createBlankForm = () => ({
   client:  { name:'', address:'', contact:'', email:'', phone:'' },
   project: { title:'', description:'' },
   scope:   { pages:['Home Page'], features:['Feature 1'], integrations:['Integration 1'] },
   timeline:[ { desc:'Project Kickoff', date: new Date().toISOString().split('T')[0] } ],
   pricing: { total:'', currency:'ZAR', deposit:'50%', revisions:'3' },
-};
+});
+
+/* ─────────────────────────────────────────────
+   PROFILES
+   Passwords removed — see email field instead.
+   Each email must match a user in Supabase Auth.
+   Create them at: Supabase Dashboard → Authentication → Users
+───────────────────────────────────────────── */
+const PROFILES = [
+  {
+    id:       'rudz',
+    name:     'Rudz',
+    email:    'rudz@arcodic.com',          // ← set this to the real Supabase Auth email
+    image:    '/rudz.webp',
+    title:    'Founder & CEO',
+    greeting: 'Welcome back.',
+    sub:      "The portal's ready. Let's close something.",
+    joke:     null,
+    btnText:  'Enter Portal',
+    color:    '#c9a96e',
+  },
+  {
+    id:       'kaleb',
+    name:     'Kaleb',
+    email:    'kaleb@arcodic.com',         // ← set this to the real Supabase Auth email
+    image:    '/kaleb.webp',
+    title:    'Co-Founder',
+    greeting: 'Oh. Kaleb.',
+    sub:      "Rudz already handled it. You're welcome.",
+    joke:     "Update your password. We've had this talk. 💀",
+    btnText:  'Fine, let him in',
+    color:    '#4a8a7a',
+  },
+];
 
 /* ─────────────────────────────────────────────
    MAIN APP
@@ -190,38 +272,36 @@ const BLANK_FORM = {
 export default function App() {
   const navigate = useNavigate();
 
-  // ── Auth ──
-  const [welcomed,     setWelcomed]     = useState(false);
-  const [activeProfile,setActiveProfile]= useState(0);
-  const [password,     setPassword]     = useState('');
-  const [pwError,      setPwError]      = useState('');
-  const [showPw,       setShowPw]       = useState(false);
-  const [pwFocused,    setPwFocused]    = useState(false);
-  const [exiting,      setExiting]      = useState(false);
+  // ── Auth — session restored from localStorage ──
+  const [welcomed,      setWelcomed]      = useState(() => !!getSession());
+  const [activeProfile, setActiveProfile] = useState(0);
+  const [password,      setPassword]      = useState('');
+  const [pwError,       setPwError]       = useState('');
+  const [showPw,        setShowPw]        = useState(false);
+  const [pwFocused,     setPwFocused]     = useState(false);
+  const [exiting,       setExiting]       = useState(false);
+  const [loggingIn,     setLoggingIn]     = useState(false);
 
   // ── Form ──
-  const [data,         setData]         = useState(BLANK_FORM);
-  const [scrolled,     setScrolled]     = useState(false);
-  const [arcSig,       setArcSig]       = useState('');
-  const [clientSig,    setClientSig]    = useState(null);
+  const [data,          setData]          = useState(createBlankForm);
+  const [scrolled,      setScrolled]      = useState(false);
+  const [arcSig,        setArcSig]        = useState('');
+  const [arcSigFont,    setArcSigFont]    = useState(0);   // FIX #5: lifted out of TypeSignPad
+  const [clientSig,     setClientSig]     = useState(null);
   const [clientSignedAt,setClientSignedAt]= useState(null);
 
   // ── Send ──
-  const [showSendModal,setShowSendModal]= useState(false);
-  const [clientEmailInput,setClientEmailInput]= useState('');
-  const [sending,      setSending]      = useState(false);
-  const [sendError,    setSendError]    = useState('');
-  const [sent,         setSent]         = useState(false);
+  const [showSendModal,     setShowSendModal]     = useState(false);
+  const [clientEmailInput,  setClientEmailInput]  = useState('');
+  const [sending,           setSending]           = useState(false);
+  const [sendError,         setSendError]         = useState('');
+  const [sent,              setSent]              = useState(false);
 
   // ── Polling ──
   const [sowId,        setSowId]        = useState(() => localStorage.getItem('arcodic_sow_id'));
+  const [pollError,    setPollError]    = useState('');
   const pollTimerRef = useRef(null);
 
-  // ── Profiles ──
-  const PROFILES = [
-    { id:'rudz',  name:'Rudz',  image:'/rudz.webp',  password:'URfavraut156', title:'Founder & CEO', greeting:'Welcome back.', sub:"The portal's ready. Let's close something.", joke:null, btnText:'Enter Portal', color:'#c9a96e' },
-    { id:'kaleb', name:'Kaleb', image:'/kaleb.webp', password:'12345',        title:'Co-Founder',    greeting:'Oh. Kaleb.',    sub:"Rudz already handled it. You're welcome.", joke:"Password hasn't changed. We've had this talk. 💀", btnText:'Fine, let him in', color:'#4a8a7a' },
-  ];
   const TOTAL = PROFILES.length;
 
   const handleGoTo = (dir) => {
@@ -233,12 +313,21 @@ export default function App() {
     }, 320);
   };
 
-  const handleLogin = () => {
-    if (password === PROFILES[activeProfile].password) {
+  // FIX #1: Passwords removed — verified via Supabase Auth
+  const handleLogin = async () => {
+    if (!password.trim()) return;
+    setLoggingIn(true);
+    setPwError('');
+    try {
+      const profile = PROFILES[activeProfile];
+      const body    = await supabaseLogin(profile.email, password);
+      saveSession(body.access_token, body.expires_in, profile.id);
       setWelcomed(true);
-    } else {
-      setPwError('Incorrect password.');
+    } catch (err) {
+      setPwError(err.message);
       setTimeout(() => setPwError(''), 2500);
+    } finally {
+      setLoggingIn(false);
     }
   };
 
@@ -256,14 +345,45 @@ export default function App() {
     return () => window.removeEventListener('scroll', h);
   }, []);
 
-  // Read ?sow= URL param (from dashboard View & Print)
+  // ── Load a SOW by ID (for both ?sow= and ?edit= params) ──
+  const loadSOWById = async (id) => {
+    try {
+      const res  = await fetch(
+        `${SUPABASE_URL}/rest/v1/sows?id=eq.${id}&select=*`,
+        { headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${getAccessToken()}` } }
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const rows = await res.json();
+      const sow  = rows?.[0];
+      if (!sow) return;
+
+      // Populate form with stored data
+      if (sow.data) setData({ ...createBlankForm(), ...sow.data });
+      if (sow.arcodic_signature) setArcSig(sow.arcodic_signature);
+      if (sow.client_signature)  { setClientSig(sow.client_signature); setClientSignedAt(sow.client_signed_at); }
+
+      setSowId(id);
+      localStorage.setItem('arcodic_sow_id', id);
+
+      // Determine sent state
+      setSent(sow.status === 'sent' || sow.status === 'completed');
+    } catch (err) {
+      console.error('Failed to load SOW:', err);
+    }
+  };
+
+  // Read URL params on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const p = params.get('sow');
-    if (p && p !== sowId) {
-      setSowId(p);
-      localStorage.setItem('arcodic_sow_id', p);
-      setClientSig(null); setClientSignedAt(null); setSent(true);
+    const sowParam  = params.get('sow');   // sent/completed — just resume polling
+    const editParam = params.get('edit');  // draft — load and edit
+
+    if (sowParam && sowParam !== sowId) {
+      loadSOWById(sowParam);
+      window.history.replaceState({}, '', '/');
+    } else if (editParam) {
+      // FIX #6 (Dashboard draft "Begin"): loads the draft's data into the form
+      loadSOWById(editParam);
       window.history.replaceState({}, '', '/');
     }
   }, []);
@@ -273,51 +393,68 @@ export default function App() {
     const onFocus = () => {
       const s = localStorage.getItem('arcodic_sow_id');
       if (s && s !== sowId) {
-        setSowId(s); setClientSig(null); setClientSignedAt(null); setSent(false);
+        setSowId(s);
+        setClientSig(null);
+        setClientSignedAt(null);
+        setSent(false);
       }
     };
     window.addEventListener('focus', onFocus);
     return () => window.removeEventListener('focus', onFocus);
   }, [sowId]);
 
-  // Poll Supabase for client signature
+  // FIX #6 (error handling): poll with real error reporting
   useEffect(() => {
     if (!sowId) return;
     const poll = async () => {
       try {
-        const res  = await fetch(`${SUPABASE_URL}/rest/v1/sows?id=eq.${sowId}&select=status,client_signature,client_signed_at`, {
-          headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` }
-        });
+        const res  = await fetch(
+          `${SUPABASE_URL}/rest/v1/sows?id=eq.${sowId}&select=status,client_signature,client_signed_at`,
+          { headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${getAccessToken()}` } }
+        );
+        if (!res.ok) throw new Error(`Poll failed: HTTP ${res.status}`);
         const rows = await res.json();
+        setPollError('');
         if (rows?.[0]?.status === 'completed') {
           setClientSig(rows[0].client_signature);
           setClientSignedAt(rows[0].client_signed_at);
           setSent(true);
-          if (pollTimerRef.current) { clearInterval(pollTimerRef.current); pollTimerRef.current = null; }
+          clearInterval(pollTimerRef.current);
+          pollTimerRef.current = null;
         }
-      } catch (e) {}
+      } catch (err) {
+        console.error('Signature poll error:', err);
+        setPollError('Connection issue — retrying…');
+      }
     };
     poll();
     pollTimerRef.current = setInterval(poll, 8000);
-    return () => { if (pollTimerRef.current) clearInterval(pollTimerRef.current); };
+    return () => { clearInterval(pollTimerRef.current); };
   }, [sowId]);
 
-  // Send via API route (triggers Resend email)
+  // Send via API route
   const sendSOW = async () => {
-    if (!data.client.name.trim())  { setSendError('Client name is required.');    return; }
-    if (!clientEmailInput.trim())  { setSendError('Client email is required.');   return; }
+    if (!data.client.name.trim())  { setSendError('Client name is required.');      return; }
+    if (!clientEmailInput.trim())  { setSendError('Client email is required.');     return; }
     if (!arcSig.trim())            { setSendError('Please sign as ARCODIC first.'); return; }
     setSending(true); setSendError('');
     try {
       const res  = await fetch('/api/send-sow', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ data, arcodic_signature:arcSig, client_email:clientEmailInput, client_name:data.client.name }),
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          data,
+          arcodic_signature: arcSig,
+          client_email:      clientEmailInput,
+          client_name:       data.client.name,
+        }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Send failed');
       setSowId(json.sow_id);
       localStorage.setItem('arcodic_sow_id', json.sow_id);
-      setSent(true); setShowSendModal(false);
+      setSent(true);
+      setShowSendModal(false);
     } catch (err) {
       setSendError(err.message);
     } finally {
@@ -325,12 +462,15 @@ export default function App() {
     }
   };
 
-  // New SOW — full reset
+  // FIX #3: reset uses createBlankForm() to capture today's date
   const handleNewSOW = () => {
-    setData(BLANK_FORM); setArcSig(''); setClientSig(null); setClientSignedAt(null);
+    setData(createBlankForm());
+    setArcSig(''); setArcSigFont(0);
+    setClientSig(null); setClientSignedAt(null);
     setClientEmailInput(''); setSent(false); setSendError('');
     setSowId(null); localStorage.removeItem('arcodic_sow_id');
-    if (pollTimerRef.current) { clearInterval(pollTimerRef.current); pollTimerRef.current = null; }
+    clearInterval(pollTimerRef.current);
+    pollTimerRef.current = null;
   };
 
   // Form helpers
@@ -338,22 +478,27 @@ export default function App() {
     const keys = path.split('.');
     setData(prev => {
       const next = JSON.parse(JSON.stringify(prev));
-      keys.reduce((obj,k,i) => i===keys.length-1 ? (obj[k]=value) : obj[k], next);
+      keys.reduce((obj, k, i) => i === keys.length - 1 ? (obj[k] = value) : obj[k], next);
       return next;
     });
   };
   const scopeAdd     = (cat)       => setData(p => { const n=JSON.parse(JSON.stringify(p)); n.scope[cat].push('New item'); return n; });
-  const scopeRemove  = (cat,i)     => setData(p => { const n=JSON.parse(JSON.stringify(p)); n.scope[cat].splice(i,1); return n; });
-  const scopeEdit    = (cat,i,v)   => setData(p => { const n=JSON.parse(JSON.stringify(p)); n.scope[cat][i]=v; return n; });
-  const timelineEdit = (i,key,val) => setData(p => { const n=JSON.parse(JSON.stringify(p)); n.timeline[i][key]=val; return n; });
-  const addMilestone    = ()  => setData(p => { const n=JSON.parse(JSON.stringify(p)); n.timeline.push({desc:'New Milestone',date:new Date().toISOString().split('T')[0]}); return n; });
+  const scopeRemove  = (cat, i)    => setData(p => { const n=JSON.parse(JSON.stringify(p)); n.scope[cat].splice(i,1); return n; });
+  const scopeEdit    = (cat, i, v) => setData(p => { const n=JSON.parse(JSON.stringify(p)); n.scope[cat][i]=v; return n; });
+  const timelineEdit = (i, key, v) => setData(p => { const n=JSON.parse(JSON.stringify(p)); n.timeline[i][key]=v; return n; });
+  const addMilestone    = ()  => setData(p => { const n=JSON.parse(JSON.stringify(p)); n.timeline.push({ desc:'New Milestone', date:new Date().toISOString().split('T')[0] }); return n; });
   const removeMilestone = (i) => setData(p => { const n=JSON.parse(JSON.stringify(p)); n.timeline.splice(i,1); return n; });
 
   const today = new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
 
-  // ════════════════════════════════════════════
-  // WELCOME SCREEN
-  // ════════════════════════════════════════════
+  // FIX #4: doc number is unique per SOW (uses ID prefix), or shows DRAFT before sending
+  const docNumber = sowId
+    ? `ARC-${new Date().getFullYear()}-${sowId.slice(0, 6).toUpperCase()}`
+    : `ARC-${new Date().getFullYear()}-DRAFT`;
+
+  /* ════════════════════════════════════════════
+     WELCOME SCREEN
+  ════════════════════════════════════════════ */
   if (!welcomed) {
     const active = PROFILES[activeProfile];
     const prev   = PROFILES[(activeProfile - 1 + TOTAL) % TOTAL];
@@ -460,7 +605,7 @@ export default function App() {
             <div className="w-arrows">
               <button className="w-arrow" onClick={() => handleGoTo('left')}>←</button>
               <div className="w-dots">
-                {PROFILES.map((_,i) => (
+                {PROFILES.map((_, i) => (
                   <div key={i} className={`w-dot ${i===activeProfile?'active':''}`}
                     onClick={() => !exiting && i!==activeProfile && handleGoTo(i>activeProfile?'right':'left')} />
                 ))}
@@ -490,7 +635,7 @@ export default function App() {
                   placeholder="• • • • • • • •"
                   value={password}
                   onChange={e => { setPassword(e.target.value); setPwError(''); }}
-                  onKeyDown={e => e.key==='Enter' && password.trim() && handleLogin()}
+                  onKeyDown={e => e.key==='Enter' && password.trim() && !loggingIn && handleLogin()}
                   onFocus={() => setPwFocused(true)}
                   onBlur={()  => setPwFocused(false)}
                   autoFocus
@@ -500,8 +645,12 @@ export default function App() {
                 </button>
               </div>
               {pwError ? <div className="w-pw-error shake">{pwError}</div> : <div className="w-pw-spacer" />}
-              <button className={`w-btn ${active.id==='rudz'?'w-btn-gold':'w-btn-teal'}`} onClick={handleLogin} disabled={!password.trim()}>
-                {active.btnText} →
+              <button
+                className={`w-btn ${active.id==='rudz'?'w-btn-gold':'w-btn-teal'}`}
+                onClick={handleLogin}
+                disabled={!password.trim() || loggingIn}
+              >
+                {loggingIn ? 'Verifying…' : active.btnText + ' →'}
               </button>
               <div className="w-btn-bar">
                 <div className={`w-btn-bar-fill ${active.id==='kaleb'?'teal':''} ${password.trim()?'has-value':''}`} />
@@ -517,9 +666,9 @@ export default function App() {
     );
   }
 
-  // ════════════════════════════════════════════
-  // MAIN PORTAL
-  // ════════════════════════════════════════════
+  /* ════════════════════════════════════════════
+     MAIN PORTAL
+  ════════════════════════════════════════════ */
   return (
     <>
       <style>{`
@@ -641,6 +790,7 @@ export default function App() {
         .status-sep{width:1px;height:16px;background:var(--border);}
         .status-link{background:none;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold-dim);transition:color 0.2s;}
         .status-link:hover{color:var(--gold);}
+        .poll-error{font-size:9px;color:var(--red);letter-spacing:0.05em;}
         .mt-4{margin-top:16px;}.mb-2{margin-bottom:8px;}
         @media print{
           :root{--bg:#fff;--surface:#fff;--card:#f9f9f7;--border:#e0dcd5;--border2:#ece8e0;--gold:#8a6a30;--gold-dim:#a07840;--gold-faint:#f5f0e8;--cream:#5a4520;--muted:#888070;--text:#1a1510;--text-dim:#6b6050;--white:#0a0806;}
@@ -678,7 +828,8 @@ export default function App() {
             <div className="doc-header-top">
               <div>
                 <h1 className="doc-title">Statement<br />of Work</h1>
-                <p className="doc-id">Agreement № ARC-{new Date().getFullYear()}-001 · {today}</p>
+                {/* FIX #4: unique, ID-based document number */}
+                <p className="doc-id">Agreement № {docNumber} · {today}</p>
               </div>
               <div className="doc-agency">
                 <div className="doc-agency-name">Arcodic</div>
@@ -696,7 +847,7 @@ export default function App() {
                 {[{key:'contact',label:'Primary Contact'},{key:'email',label:'Email'},{key:'phone',label:'Phone'}].map(({key,label}) => (
                   <div className="client-row" key={key}>
                     <span className="client-key">{label}</span>
-                    <div className="client-val" style={{flex:1}}><Field value={data.client[key]} onChange={v => set(`client.${key}`,v)} /></div>
+                    <div className="client-val" style={{flex:1}}><Field value={data.client[key]} onChange={v => set(`client.${key}`, v)} /></div>
                   </div>
                 ))}
               </div>
@@ -710,8 +861,8 @@ export default function App() {
             <div className="section">
               <div className="section-header"><span className="section-num">01</span><h2 className="section-title">Project Overview</h2><Briefcase size={14} className="section-icon" /></div>
               <div className="overview-grid">
-                <Field className="field-large mb-2" value={data.project.title} onChange={v => set('project.title',v)} placeholder="Project title" />
-                <Field className="field-muted" value={data.project.description} onChange={v => set('project.description',v)} multiline rows={3} placeholder="Project description" />
+                <Field className="field-large mb-2" value={data.project.title} onChange={v => set('project.title', v)} placeholder="Project title" />
+                <Field className="field-muted" value={data.project.description} onChange={v => set('project.description', v)} multiline rows={3} placeholder="Project description" />
               </div>
             </div>
 
@@ -730,7 +881,7 @@ export default function App() {
               <div>
                 <div className="section-header"><span className="section-num">03</span><h2 className="section-title">Milestones</h2><Calendar size={14} className="section-icon" /></div>
                 <div className="timeline">
-                  {data.timeline.map((m,i) => (
+                  {data.timeline.map((m, i) => (
                     <div className="timeline-item" key={i}>
                       <div className="timeline-dot" />
                       <Field value={m.desc} onChange={v=>timelineEdit(i,'desc',v)} placeholder="Milestone" />
@@ -764,7 +915,17 @@ export default function App() {
             <div className="section">
               <div className="section-header"><span className="section-num">05</span><h2 className="section-title">Acceptance & Signing</h2><PenTool size={14} className="section-icon" /></div>
               <div className="two-col">
-                <TypeSignPad label="ARCODIC" signatory="A. Arcodic Representative" date={today} value={arcSig} onChange={setArcSig} locked={sent} />
+                {/* FIX #5: fontIdx and onFontChange are passed from App state */}
+                <TypeSignPad
+                  label="ARCODIC"
+                  signatory="A. Arcodic Representative"
+                  date={today}
+                  value={arcSig}
+                  onChange={setArcSig}
+                  fontIdx={arcSigFont}
+                  onFontChange={setArcSigFont}
+                  locked={sent}
+                />
                 {clientSig ? (
                   <TypeSignPad
                     label="CLIENT"
@@ -772,6 +933,7 @@ export default function App() {
                     date={clientSignedAt ? new Date(clientSignedAt).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}) : today}
                     value={clientSig}
                     onChange={() => {}}
+                    fontIdx={0}
                     locked={true}
                   />
                 ) : (
@@ -807,12 +969,14 @@ export default function App() {
             <p style={{fontSize:11,color:'var(--muted)',marginBottom:28,lineHeight:1.7}}>The client receives a unique link to review and sign. Your signature locks once sent.</p>
             <div style={{marginBottom:20}}>
               <div style={{fontSize:9,letterSpacing:'0.18em',textTransform:'uppercase',color:'var(--gold-dim)',marginBottom:8}}>Client Email</div>
+              {/* FIX #9: focus state handled via CSS class, not inline style mutation */}
               <input
-                type="email" placeholder="client@company.com" value={clientEmailInput}
-                onChange={e=>setClientEmailInput(e.target.value)}
-                style={{width:'100%',background:'var(--surface)',border:'1px solid var(--border)',color:'var(--text)',fontFamily:"'DM Mono',monospace",fontSize:13,padding:'12px 14px',outline:'none',transition:'border-color 0.2s',borderRadius:0}}
-                onFocus={e=>e.target.style.borderColor='var(--gold-dim)'}
-                onBlur={e=>e.target.style.borderColor='var(--border)'}
+                type="email"
+                placeholder="client@company.com"
+                value={clientEmailInput}
+                onChange={e => setClientEmailInput(e.target.value)}
+                className="editable"
+                style={{width:'100%',background:'var(--surface)',border:'1px solid var(--border)',color:'var(--text)',fontFamily:"'DM Mono',monospace",fontSize:13,padding:'12px 14px',outline:'none',borderRadius:0}}
                 onKeyDown={e=>e.key==='Enter'&&sendSOW()}
               />
             </div>
@@ -829,6 +993,8 @@ export default function App() {
       <div className="status-bar print-hide">
         <div className={`status-dot ${sent && !clientSig ? 'awaiting' : ''}`} />
         <span className="status-text">{clientSig ? 'Fully signed' : sent ? 'Awaiting client signature' : 'Ready'}</span>
+        {/* FIX #6: show poll error in the UI instead of swallowing it silently */}
+        {pollError && <span className="poll-error">{pollError}</span>}
         <div className="status-sep" />
         <button className="status-link" onClick={()=>window.scrollTo({top:0,behavior:'smooth'})}>↑ Top</button>
         <div className="status-sep" />
