@@ -12,9 +12,6 @@ import Clients from './pages/admin/Clients';
 import Payments from './pages/admin/Payments';
 import Contracts from './pages/admin/Contracts';
 import Settings from './pages/admin/Settings';
-import SignPage from './legacy/SignPage';
-import SowBuilder from './legacy/SowBuilder';
-import SowDashboard from './legacy/SowDashboard';
 import { Spinner } from './components/ui';
 
 // Landing at "/" — routes to the right dashboard by role once a session
@@ -56,17 +53,6 @@ export default function App() {
           <Route path="contracts" element={<Contracts />} />
           <Route path="settings" element={<Settings />} />
         </Route>
-
-        {/* External, no-login-required signing link (SignWell is used for
-            new contracts, but this keeps already-issued legacy links
-            working). */}
-        <Route path="/sign/:token" element={<SignPage />} />
-
-        {/* Legacy SOW builder tool, superseded by the admin Projects/
-            Contracts flow — kept reachable for continuity, not linked from
-            the new portal nav. */}
-        <Route path="/legacy" element={<SowBuilder />} />
-        <Route path="/legacy/dashboard" element={<SowDashboard />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

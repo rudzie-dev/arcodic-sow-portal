@@ -38,9 +38,6 @@ src/
                                 Payments, Contracts, Settings)
   lib/stages.js                internal ↔ client-facing stage mapping
   lib/contractTemplate.js      locked master SOW terms
-  legacy/                      original manual SOW builder — kept at
-                                /legacy and /legacy/dashboard, no longer
-                                linked from the new portal nav
 api/
   send-contract.js             renders a contract to PDF, sends via SignWell
 supabase/
