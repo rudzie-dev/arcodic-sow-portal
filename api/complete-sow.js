@@ -1,12 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 
-const supabase = createClient(
-  'https://ctjwqktzdvbfijoqnxvo.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0andxa3R6ZHZiZmlqb3FueHZvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTQ4NjcwOSwiZXhwIjoyMDg3MDYyNzA5fQ.qcMPWEAKABq2D-jYXliLveX4wH3K_Uz8y2OQW1j_pVs'
-);
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-const resend = new Resend('re_c83UwjdW_GoxhXKvYpehePiEeTFAoiTt7');
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();

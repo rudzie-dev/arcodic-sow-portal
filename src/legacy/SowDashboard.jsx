@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const SUPABASE_URL = 'https://ctjwqktzdvbfijoqnxvo.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0andxa3R6ZHZiZmlqb3FueHZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0ODY3MDksImV4cCI6MjA4NzA2MjcwOX0.ng2Ek0nFDteMqsQM-Or-TCBkp424uyCKbWjNbJ7MpUo';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // FIX #8: complete symbol map for all 20 currencies defined in App.jsx
 const CURRENCY_SYMBOLS = {
@@ -223,13 +223,13 @@ export default function Dashboard() {
         {/* NAV */}
         <nav className="db-nav">
           <div className="db-nav-left">
-            <div className="db-logo" onClick={() => navigate('/')}>ARC<span>.</span></div>
+            <div className="db-logo" onClick={() => navigate('/legacy')}>ARC<span>.</span></div>
             <div className="db-nav-sep" />
             <div className="db-nav-title">SOW Dashboard</div>
           </div>
           <div className="db-nav-right">
             <button className="db-refresh-btn" onClick={load}>↻ Refresh</button>
-            <button className="db-new-btn" onClick={() => navigate('/')}>+ New SOW</button>
+            <button className="db-new-btn" onClick={() => navigate('/legacy')}>+ New SOW</button>
           </div>
         </nav>
 
@@ -344,7 +344,7 @@ export default function Dashboard() {
                                   onClick={e => {
                                     e.stopPropagation();
                                     localStorage.setItem('arcodic_sow_id', sow.id);
-                                    navigate('/?sow=' + sow.id);
+                                    navigate('/legacy?sow=' + sow.id);
                                   }}
                                 >Print</button>
                               </>
@@ -358,7 +358,7 @@ export default function Dashboard() {
                                 className="db-act-btn primary"
                                 onClick={e => {
                                   e.stopPropagation();
-                                  navigate('/?edit=' + sow.id);
+                                  navigate('/legacy?edit=' + sow.id);
                                 }}
                               >Resume →</button>
                             )}
