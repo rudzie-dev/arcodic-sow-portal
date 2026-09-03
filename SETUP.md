@@ -48,11 +48,25 @@ RESEND_API_KEY=<your new Resend key>
 See `.env.example` for the full list, including the optional
 `SIGNWELL_API_KEY`/`SIGNWELL_TEST_MODE` fallback.
 
-## 2. Enable email OTP
+## 2. Sign-in email: magic link, and its redirect URL
 
-Supabase Dashboard → Authentication → Providers → Email: confirm OTP
-sign-in is enabled (this isn't configurable via the Supabase MCP tools, so
-verify it by hand — it's on by default for new projects).
+Login is passwordless via a magic link (not a typed code) — Supabase's
+built-in email sender only lets you customize a template's subject/body
+once custom SMTP is configured, so a typed-code flow would show a blank
+"Magic Link" template with no visible code. A link needs no template
+edits, so it works with zero extra setup.
+
+One thing you *do* need to set: Supabase Dashboard → Authentication → URL
+Configuration →
+
+- **Site URL**: your deployed portal URL (e.g. `https://your-app.vercel.app`)
+- **Redirect URLs**: add that same URL (and `http://localhost:5173` for
+  local dev) — Supabase rejects the sign-in redirect otherwise.
+
+If you'd rather have a typed 6-digit code later (closer to the original
+brief), that needs custom SMTP (e.g. point Supabase's SMTP settings at
+Resend) so the Magic Link template can be edited to include `{{ .Token }}`
+— ask and I'll wire `Login.jsx` back to a code-entry step.
 
 ## 3. Promote your admin account
 

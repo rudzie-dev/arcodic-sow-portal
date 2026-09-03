@@ -4,12 +4,17 @@ import { supabase } from '../lib/supabase';
 const AuthContext = createContext(null);
 
 /**
- * Wraps Supabase Auth (email OTP) + the `profiles` row that carries role
- * ('admin' | 'client') and, for clients, which `clients` record they map to.
+ * Wraps Supabase Auth (passwordless email sign-in, via a magic link) + the
+ * `profiles` row that carries role ('admin' | 'client') and, for clients,
+ * which `clients` record they map to.
+ *
+ * The magic link lands back on the app with the session in the URL —
+ * supabase-js's `detectSessionInUrl` (on by default) picks it up and fires
+ * onAuthStateChange below, so there's no separate "verify" step to call.
  *
  * Kept deliberately thin so a v2 WebAuthn/passkey sign-in can slot in next
- * to signInWithOtp/verifyOtp without touching anything downstream — every
- * consumer only ever reads { session, profile, loading }.
+ * to signInWithOtp without touching anything downstream — every consumer
+ * only ever reads { session, profile, loading }.
  */
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
@@ -51,21 +56,17 @@ export function AuthProvider({ children }) {
     };
   }, [loadProfile]);
 
+  // Sends a magic link (no code to type — click the link, land back here
+  // signed in). Requires the Site URL / Redirect URLs allowlist in
+  // Supabase → Authentication → URL Configuration to include this app's
+  // origin, or Supabase will reject the redirect.
   const requestOtp = useCallback(async (email) => {
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { shouldCreateUser: true },
+      options: { shouldCreateUser: true, emailRedirectTo: `${window.location.origin}/` },
     });
     if (error) throw error;
   }, []);
-
-  const verifyOtp = useCallback(async (email, token) => {
-    const { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
-    if (error) throw error;
-    setSession(data.session);
-    await loadProfile(data.session?.user?.id);
-    return data;
-  }, [loadProfile]);
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
@@ -80,7 +81,6 @@ export function AuthProvider({ children }) {
     role: profile?.role ?? null,
     loading,
     requestOtp,
-    verifyOtp,
     signOut,
   };
 

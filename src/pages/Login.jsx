@@ -1,55 +1,35 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Button, Spinner } from '../components/ui';
+import { Mail } from 'lucide-react';
 
-// Email OTP (6-digit code) — no passwords. Two-step: request code, verify
-// code. Auth logic lives in AuthContext so a v2 WebAuthn/passkey option can
-// be added as a sibling entry point without touching this screen's shape.
+// Passwordless email sign-in via a magic link — no password, no code to
+// type. Clicking the link in the email brings the user straight back here
+// signed in (see AuthContext for how the session gets picked up).
 export default function Login() {
-  const { requestOtp, verifyOtp, session } = useAuth();
+  const { requestOtp, session } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [step, setStep] = useState('email'); // 'email' | 'code'
+  const [step, setStep] = useState('email'); // 'email' | 'sent'
   const [email, setEmail] = useState('');
-  const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const codeRef = useRef(null);
 
   useEffect(() => {
     if (session) navigate(location.state?.from || '/', { replace: true });
   }, [session]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    if (step === 'code') codeRef.current?.focus();
-  }, [step]);
-
-  const sendCode = async (e) => {
+  const sendLink = async (e) => {
     e.preventDefault();
     if (!email.trim()) return;
     setBusy(true);
     setError('');
     try {
       await requestOtp(email.trim());
-      setStep('code');
+      setStep('sent');
     } catch (err) {
-      setError(err.message || 'Could not send code.');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const confirmCode = async (e) => {
-    e.preventDefault();
-    if (code.trim().length < 6) return;
-    setBusy(true);
-    setError('');
-    try {
-      await verifyOtp(email.trim(), code.trim());
-      // AuthContext's session update triggers the redirect effect above.
-    } catch (err) {
-      setError(err.message || 'Invalid or expired code.');
+      setError(err.message || 'Could not send link.');
     } finally {
       setBusy(false);
     }
@@ -78,11 +58,11 @@ export default function Login() {
 
         <div className="glass rounded-2xl p-8 glow-gold">
           {step === 'email' ? (
-            <form onSubmit={sendCode} className="flex flex-col gap-5">
+            <form onSubmit={sendLink} className="flex flex-col gap-5">
               <div>
                 <h1 className="font-display text-2xl font-semibold text-[var(--white)] mb-1.5">Sign in</h1>
                 <p className="text-[11px] text-[var(--text-dim)] leading-relaxed">
-                  Enter your email and we'll send you a one-time code — no password needed.
+                  Enter your email and we'll send you a one-time sign-in link — no password needed.
                 </p>
               </div>
               <label className="flex flex-col gap-1.5">
@@ -99,43 +79,29 @@ export default function Login() {
               </label>
               {error && <p className="text-[11px] text-[var(--danger)]">{error}</p>}
               <Button type="submit" disabled={busy || !email.trim()} className="w-full py-3">
-                {busy ? <Spinner size={14} /> : 'Send code →'}
+                {busy ? <Spinner size={14} /> : 'Send sign-in link →'}
               </Button>
             </form>
           ) : (
-            <form onSubmit={confirmCode} className="flex flex-col gap-5">
+            <div className="flex flex-col gap-5 items-center text-center">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: 'var(--gold-faint)' }}>
+                <Mail size={20} className="text-[var(--gold)]" />
+              </div>
               <div>
-                <h1 className="font-display text-2xl font-semibold text-[var(--white)] mb-1.5">Enter code</h1>
+                <h1 className="font-display text-2xl font-semibold text-[var(--white)] mb-1.5">Check your email</h1>
                 <p className="text-[11px] text-[var(--text-dim)] leading-relaxed">
-                  We sent a 6-digit code to <span className="text-[var(--cream)]">{email}</span>.
+                  We sent a sign-in link to <span className="text-[var(--cream)]">{email}</span>. Open it on this
+                  device to continue.
                 </p>
               </div>
-              <label className="flex flex-col gap-1.5">
-                <span className="text-[9px] uppercase tracking-[0.15em] text-[var(--muted)]">Code</span>
-                <input
-                  ref={codeRef}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={6}
-                  required
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-                  placeholder="••••••"
-                  className="bg-[var(--card)] border border-[var(--border)] rounded-lg px-3.5 py-3 text-[22px] tracking-[0.4em] text-center text-[var(--cream)] outline-none transition-colors focus:border-[var(--gold-dim)] placeholder:text-[var(--faint)] placeholder:tracking-[0.4em]"
-                />
-              </label>
-              {error && <p className="text-[11px] text-[var(--danger)]">{error}</p>}
-              <Button type="submit" disabled={busy || code.trim().length < 6} className="w-full py-3">
-                {busy ? <Spinner size={14} /> : 'Verify & continue →'}
-              </Button>
               <button
                 type="button"
-                onClick={() => { setStep('email'); setCode(''); setError(''); }}
+                onClick={() => { setStep('email'); setError(''); }}
                 className="text-[10px] uppercase tracking-wider text-[var(--muted)] hover:text-[var(--gold)] transition-colors"
               >
                 ← Use a different email
               </button>
-            </form>
+            </div>
           )}
         </div>
         <p className="text-center text-[9px] uppercase tracking-[0.15em] text-[var(--faint)] mt-8">
