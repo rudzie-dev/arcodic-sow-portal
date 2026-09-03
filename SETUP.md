@@ -59,7 +59,7 @@ edits, so it works with zero extra setup.
 One thing you *do* need to set: Supabase Dashboard → Authentication → URL
 Configuration →
 
-- **Site URL**: your deployed portal URL (e.g. `https://your-app.vercel.app`)
+- **Site URL**: `https://portal.arcodic.com`
 - **Redirect URLs**: add that same URL (and `http://localhost:5173` for
   local dev) — Supabase rejects the sign-in redirect otherwise.
 
@@ -88,7 +88,7 @@ dashboard, once linked locally):
 
 ```bash
 supabase link --project-ref roscpquoxcplknwsbqjl
-supabase secrets set RESEND_API_KEY=... PORTAL_URL=https://your-portal.vercel.app SIGNWELL_WEBHOOK_SECRET=some-random-string
+supabase secrets set RESEND_API_KEY=... PORTAL_URL=https://portal.arcodic.com SIGNWELL_WEBHOOK_SECRET=some-random-string
 ```
 
 (`SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` are auto-injected into every
