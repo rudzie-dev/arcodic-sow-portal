@@ -1,4 +1,5 @@
 import React from 'react';
+import { useAuth } from '../context/AuthContext';
 
 // Small shared primitives used across both the admin and client sides so
 // the two dashboards stay visually consistent while admin screens can run
@@ -95,6 +96,19 @@ export function Spinner({ size = 16 }) {
       <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" opacity="0.2" />
       <path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
     </svg>
+  );
+}
+
+// Shown instead of an infinite spinner when session/profile restoration
+// fails outright, so a real error is always visible and recoverable
+// rather than hanging silently forever.
+export function AuthErrorScreen({ message }) {
+  const { signOut } = useAuth();
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[var(--bg)] px-6 text-center">
+      <p className="text-[13px] text-[var(--danger)] max-w-sm">{message}</p>
+      <Button onClick={signOut}>Sign out & try again</Button>
+    </div>
   );
 }
 

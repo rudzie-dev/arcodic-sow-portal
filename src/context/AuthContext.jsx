@@ -14,36 +14,50 @@ const AuthContext = createContext(null);
  *
  * Kept deliberately thin so a v2 WebAuthn/passkey sign-in can slot in next
  * to signInWithOtp without touching anything downstream — every consumer
- * only ever reads { session, profile, loading }.
+ * only ever reads { session, profile, loading, authError }.
  */
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState('');
 
+  // Never throws — a failed lookup clears the profile and records the
+  // error instead of leaving the caller's loading state stuck forever.
   const loadProfile = useCallback(async (userId) => {
     if (!userId) {
       setProfile(null);
       return;
     }
-    const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
-    if (error) {
-      console.error('Failed to load profile:', error.message);
+    try {
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+      if (error) throw error;
+      setProfile(data);
+      setAuthError('');
+    } catch (err) {
+      console.error('Failed to load profile:', err);
       setProfile(null);
-      return;
+      setAuthError(err.message || 'Failed to load your account.');
     }
-    setProfile(data);
   }, []);
 
   useEffect(() => {
     let mounted = true;
 
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (!mounted) return;
-      setSession(data.session);
-      await loadProfile(data.session?.user?.id);
-      if (mounted) setLoading(false);
-    });
+    (async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        if (!mounted) return;
+        setSession(data.session);
+        await loadProfile(data.session?.user?.id);
+      } catch (err) {
+        console.error('Failed to restore session:', err);
+        if (mounted) setAuthError(err.message || 'Failed to restore your session.');
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
 
     const { data: sub } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
       setSession(newSession);
@@ -72,6 +86,7 @@ export function AuthProvider({ children }) {
     await supabase.auth.signOut();
     setSession(null);
     setProfile(null);
+    setAuthError('');
   }, []);
 
   const value = {
@@ -80,6 +95,7 @@ export function AuthProvider({ children }) {
     profile,
     role: profile?.role ?? null,
     loading,
+    authError,
     requestOtp,
     signOut,
   };

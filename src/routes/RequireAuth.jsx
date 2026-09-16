@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Spinner } from '../components/ui';
+import { Spinner, AuthErrorScreen } from '../components/ui';
 
 function FullScreenLoader() {
   return (
@@ -14,10 +14,11 @@ function FullScreenLoader() {
 // Blocks until a session exists; optionally restricts to a role and sends
 // the wrong role to its own home instead of a dead end.
 export function RequireAuth({ role, children }) {
-  const { session, role: currentRole, loading } = useAuth();
+  const { session, role: currentRole, loading, authError } = useAuth();
   const location = useLocation();
 
   if (loading) return <FullScreenLoader />;
+  if (authError) return <AuthErrorScreen message={authError} />;
   if (!session) return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   if (role && currentRole && currentRole !== role) {
     return <Navigate to={currentRole === 'admin' ? '/admin' : '/'} replace />;

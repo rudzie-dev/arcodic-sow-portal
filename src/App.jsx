@@ -12,12 +12,12 @@ import Clients from './pages/admin/Clients';
 import Payments from './pages/admin/Payments';
 import Contracts from './pages/admin/Contracts';
 import Settings from './pages/admin/Settings';
-import { Spinner } from './components/ui';
+import { Spinner, AuthErrorScreen } from './components/ui';
 
 // Landing at "/" — routes to the right dashboard by role once a session
 // exists, otherwise off to /login.
 function RoleHome() {
-  const { session, role, loading } = useAuth();
+  const { session, role, loading, authError } = useAuth();
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--bg)]">
@@ -25,6 +25,7 @@ function RoleHome() {
       </div>
     );
   }
+  if (authError) return <AuthErrorScreen message={authError} />;
   if (!session) return <Navigate to="/login" replace />;
   if (role === 'admin') return <Navigate to="/admin" replace />;
   return <ClientDashboard />;
