@@ -55,9 +55,9 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .hero .ph { position: absolute; inset: 0; opacity: .9; }
 .hero .ph::after { content: none; }
 .hero::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgba(14,11,11,.35) 0%, rgba(14,11,11,.1) 40%, rgba(14,11,11,.75) 100%); }
-.hero { min-height: min(54svh, 620px); display: flex; align-items: flex-end; }
-.hero .wrap { position: relative; z-index: 2; width: 100%; padding-block: clamp(40px, 9svh, 120px) clamp(20px, 4svh, 40px); }
-.hero h1 { font-family: var(--display); font-weight: 400; font-size: clamp(48px, min(13vw, 19svh), 168px); line-height: .92; letter-spacing: -.02em; margin: 0; text-transform: lowercase; text-wrap: balance; }
+.hero { min-height: calc(100svh - 56px); min-height: calc(100dvh - 56px); display: flex; align-items: flex-end; }
+.hero .wrap { position: relative; z-index: 2; width: 100%; padding-block: clamp(40px, 9svh, 120px) clamp(32px, 7svh, 72px); }
+.hero h1 { font-family: var(--display); font-weight: 400; font-size: clamp(56px, min(15vw, 26svh), 200px); line-height: .92; letter-spacing: -.02em; margin: 0; text-transform: lowercase; text-wrap: balance; }
 .hero h1 em { font-style: italic; color: #ffd9dd; }
 .hero .rule { display: flex; align-items: center; gap: 18px; margin-top: clamp(14px, 3svh, 34px); }
 .hero .rule::before { content: ""; flex: 1; max-width: 340px; height: 1px; background: rgba(255,255,255,.7); }
