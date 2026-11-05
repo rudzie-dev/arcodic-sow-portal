@@ -53,15 +53,23 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .btn.line:hover { background: var(--paper); color: var(--ink); }
 
 /* hero */
-.hero { background: var(--ink); color: #f4eadf; position: relative; overflow: hidden; margin-top: calc(-1 * var(--nav-h)); min-height: 100svh; min-height: 100dvh; display: flex; align-items: center; justify-content: center; text-align: center; }
-.hero .ph { position: absolute; inset: 0; background: radial-gradient(55% 60% at 78% 22%, #d9806f 0%, rgba(217,128,111,0) 70%), radial-gradient(70% 80% at 12% 85%, #8f0b20 0%, rgba(143,11,32,0) 75%), linear-gradient(165deg, #6b1020 0%, #a3162b 55%, #4a0a14 100%); }
+.hero-track { position: relative; height: 230svh; margin-top: calc(-1 * var(--nav-h)); }
+.hero { --lift: .14; background: var(--ink); color: #f4eadf; position: sticky; top: 0; overflow: hidden; height: 100svh; height: 100dvh; display: flex; align-items: center; justify-content: center; text-align: center; }
+.hero .ph { position: absolute; inset: 0; background: radial-gradient(45% 55% at 72% 38%, rgba(201,128,98,.65) 0%, rgba(201,128,98,0) 70%), radial-gradient(40% 50% at 18% 75%, #4a0c18 0%, rgba(74,12,24,0) 75%), linear-gradient(160deg, #1a0a0d 0%, #2d0e16 60%, #12080a 100%); }
 .hero .ph::after { left: auto; right: max(16px, env(safe-area-inset-right, 0px)); bottom: 14px; text-align: right; }
-.hero::before { content: ""; position: absolute; inset: 0 0 auto; height: 160px; z-index: 1; background: linear-gradient(180deg, rgba(14,11,11,.3), rgba(14,11,11,0)); }
+.veil { position: absolute; inset: 0; z-index: 1; pointer-events: none; transform: translate3d(0, calc(var(--lift) * (-100% - 30px)), 0); will-change: transform; background: linear-gradient(180deg, rgba(110,8,26,.78) 0%, rgba(200,16,46,.7) 55%, rgba(214,30,58,.78) 100%), repeating-linear-gradient(90deg, rgba(255,255,255,0) 0, rgba(255,255,255,.12) 3.5%, rgba(0,0,0,.16) 7%, rgba(255,255,255,0) 10.5%); -webkit-backdrop-filter: blur(calc((1 - var(--lift)) * 7px)); backdrop-filter: blur(calc((1 - var(--lift)) * 7px)); box-shadow: 0 2px 0 #d9b26a, 0 14px 30px rgba(0,0,0,.35); }
+.veil::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 12px; margin-top: 2px; background: radial-gradient(circle at 10px 0, #e2bf7a 8px, rgba(226,191,122,0) 8.6px) 0 0 / 20px 12px repeat-x; }
+.hero::before { content: ""; position: absolute; inset: 0 0 auto; height: 160px; z-index: 3; pointer-events: none; background: linear-gradient(180deg, rgba(14,11,11,.3), rgba(14,11,11,0)); }
 .hero .wrap { position: relative; z-index: 2; width: 100%; padding-block: calc(var(--nav-h) + 24px) 48px; }
 .hero h1 { font-family: var(--body); font-weight: 300; font-size: clamp(60px, min(17vw, 26svh), 240px); line-height: 1; letter-spacing: -.035em; margin: 0; text-transform: lowercase; color: #f4eadf; }
 .hero .tagline { display: flex; align-items: center; gap: clamp(12px, 2vw, 22px); max-width: min(100%, 1020px); margin: clamp(6px, 1.5svh, 16px) auto 0; }
 .hero .tagline::before { content: ""; flex: 1; height: 1px; background: rgba(244,234,223,.7); }
 .hero .tagline span { font-size: clamp(9px, 1.1vw, 12px); font-weight: 500; letter-spacing: .2em; text-transform: uppercase; white-space: nowrap; }
+.hero .hint { position: absolute; z-index: 2; left: max(16px, env(safe-area-inset-left, 0px)); bottom: 14px; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; opacity: calc(1 - var(--lift) * 4); }
+@media (prefers-reduced-motion: no-preference) {
+  .hero .wrap { animation: rise 1.2s ease-out both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+}
 .intro { background: var(--scarlet); color: var(--paper); padding-block: clamp(40px, 8svh, 100px); }
 .intro .grid { display: grid; grid-template-columns: 5fr 7fr; gap: clamp(28px, 6vw, 80px); align-items: start; }
 .intro .tall { aspect-ratio: 3/4; max-width: min(340px, 46svh); width: 100%; }
@@ -160,13 +168,17 @@ footer .mark { font-family: var(--display); font-style: italic; color: var(--pap
   </div>
 </header>
 
+<div class="hero-track" id="heroTrack">
 <section class="hero" id="top">
   <div class="ph" data-label="Photo: full-bleed bridal close-up" aria-hidden="true"></div>
+  <div class="veil" aria-hidden="true"></div>
   <div class="wrap">
     <h1>scarlet rose</h1>
     <div class="tagline"><span>Luxury hair &amp; bridal artistry &nbsp;|&nbsp; Aloe Park</span></div>
   </div>
+  <span class="hint">Scroll to lift the veil</span>
 </section>
+</div>
 
 <section class="intro" id="about">
   <div class="wrap grid">
@@ -296,9 +308,36 @@ footer .mark { font-family: var(--display); font-style: italic; color: var(--pap
 
 <script>
 var nav = document.getElementById('nav');
-function onScroll() { nav.classList.toggle('scrolled', window.scrollY > 40); }
-window.addEventListener('scroll', onScroll, { passive: true });
-onScroll();
+var track = document.getElementById('heroTrack');
+var hero = document.getElementById('top');
+var intro = 0;
+var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function update() {
+  var max = Math.max(track.offsetHeight - window.innerHeight, 1);
+  var p = Math.min(Math.max(window.scrollY / max, 0), 1);
+  var lift = Math.max(intro, Math.min(p / 0.8, 1));
+  hero.style.setProperty('--lift', lift.toFixed(4));
+  nav.classList.toggle('scrolled', window.scrollY > max - 10);
+}
+var ticking = false;
+window.addEventListener('scroll', function () {
+  if (!ticking) { ticking = true; requestAnimationFrame(function () { ticking = false; update(); }); }
+}, { passive: true });
+window.addEventListener('resize', update);
+if (reduce || window.scrollY > 0) { intro = .14; update(); }
+else {
+  var t0 = null;
+  hero.style.setProperty('--lift', '0');
+  setTimeout(function () {
+    requestAnimationFrame(function step(t) {
+      if (t0 === null) t0 = t;
+      var k = Math.min((t - t0) / 1800, 1);
+      intro = .14 * (1 - Math.pow(1 - k, 3));
+      update();
+      if (k < 1) requestAnimationFrame(step);
+    });
+  }, 500);
+}
 document.getElementById('book').addEventListener('submit', function (e) {
   e.preventDefault();
   document.getElementById('thanks').hidden = false;
