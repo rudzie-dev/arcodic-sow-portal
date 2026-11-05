@@ -43,7 +43,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .ph.f::after { color: rgba(14,11,11,.65); }
 
 /* nav */
-.nav { background: transparent; color: #f4eadf; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; height: var(--nav-h); transition: background .25s; }
+.nav { background: transparent; color: #f4eadf; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; height: var(--nav-h); transition: background .25s, transform .5s cubic-bezier(.4, 0, .2, 1); }
+.nav.hidden { transform: translateY(-100%); }
 .nav.scrolled { background: var(--ink); }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--ink); }
 .nav .wrap { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding-block: 14px; }
@@ -119,7 +120,8 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .pair .ph:nth-child(3) { height: clamp(90px, 18svh, 200px); grid-column: 1 / -1; }
 
 /* our work */
-.work { padding-block: clamp(28px, 6svh, 80px) clamp(24px, 4svh, 40px); text-align: center; }
+.work { min-height: 100vh; min-height: 100svh; display: flex; align-items: center; scroll-margin-top: 0; padding-block: clamp(24px, 5svh, 64px); text-align: center; }
+.work .wrap { width: 100%; }
 .collage { display: grid; grid-template-columns: repeat(12, 1fr); grid-auto-rows: clamp(24px, 6svh, 62px); gap: clamp(6px, 1.2svh, 10px); text-align: left; }
 .collage .ph:nth-child(1) { grid-column: 1 / 5; grid-row: 1 / 6; }
 .collage .ph:nth-child(2) { grid-column: 5 / 8; grid-row: 2 / 6; }
@@ -319,16 +321,34 @@ footer .mark { font-family: var(--body); font-weight: 300; text-transform: lower
 var nav = document.getElementById('nav');
 var hero = document.getElementById('top');
 var wordmark = hero.querySelector('h1');
-var ticking = false;
+var work = document.getElementById('work');
+var ticking = false, lastY = window.scrollY, hideNav = false, peek = false, focused = false;
+function applyNav() { nav.classList.toggle('hidden', hideNav && !peek && !focused); }
 function update() {
   var past = wordmark.getBoundingClientRect().bottom < 90;
   nav.classList.toggle('scrolled', past);
   nav.classList.toggle('show-mark', past);
+  // Immersive "our work": tuck the bar away while the section fills the screen.
+  var wr = work.getBoundingClientRect();
+  var inWork = wr.top <= 40 && wr.bottom > window.innerHeight * 0.6;
+  var dy = window.scrollY - lastY;
+  lastY = window.scrollY;
+  if (!inWork) hideNav = false;
+  else if (dy > 2) hideNav = true;
+  else if (dy < -2) hideNav = false;
+  applyNav();
 }
 window.addEventListener('scroll', function () {
   if (!ticking) { ticking = true; requestAnimationFrame(function () { ticking = false; update(); }); }
 }, { passive: true });
 window.addEventListener('resize', update);
+window.addEventListener('mousemove', function (e) {
+  if (!e.movementX && !e.movementY) return; // ignore synthetic moves fired after a scroll
+  var near = e.clientY < 64;
+  if (near !== peek) { peek = near; applyNav(); }
+}, { passive: true });
+nav.addEventListener('focusin', function () { focused = true; applyNav(); });
+nav.addEventListener('focusout', function () { focused = false; applyNav(); });
 update();
 document.getElementById('book').addEventListener('submit', function (e) {
   e.preventDefault();
