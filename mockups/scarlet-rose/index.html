@@ -322,7 +322,7 @@ var nav = document.getElementById('nav');
 var hero = document.getElementById('top');
 var wordmark = hero.querySelector('h1');
 var work = document.getElementById('work');
-var ticking = false, lastY = window.scrollY, hideNav = false, peek = false, focused = false;
+var ticking = false, lastY = window.scrollY, hideNav = false, peek = false, focused = false, wasInWork = false, dirDown = true, snapTimer = null;
 function applyNav() { nav.classList.toggle('hidden', hideNav && !peek && !focused); }
 function update() {
   var past = wordmark.getBoundingClientRect().bottom < 90;
@@ -333,10 +333,23 @@ function update() {
   var inWork = wr.top <= 40 && wr.bottom > window.innerHeight * 0.6;
   var dy = window.scrollY - lastY;
   lastY = window.scrollY;
+  if (dy !== 0) dirDown = dy > 0;
   if (!inWork) hideNav = false;
+  else if (!wasInWork) hideNav = dy > 0; // arriving from above hides the bar, from below keeps it
   else if (dy > 2) hideNav = true;
   else if (dy < -2) hideNav = false;
+  wasInWork = inWork;
   applyNav();
+  clearTimeout(snapTimer);
+  snapTimer = setTimeout(settleWork, 140);
+}
+// When scrolling stops with "our work" part-way into view, finish the move in the direction
+// the visitor was already going, so the section lands filling the screen. Never pulls back.
+function settleWork() {
+  var wr = work.getBoundingClientRect(), vh = window.innerHeight, delta = 0;
+  if (dirDown && wr.top > 8 && wr.top < vh * 0.55) delta = wr.top;
+  else if (!dirDown && wr.top < -8 && wr.top > -vh * 0.55) delta = wr.top;
+  if (delta) window.scrollBy({ top: delta, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 }
 window.addEventListener('scroll', function () {
   if (!ticking) { ticking = true; requestAnimationFrame(function () { ticking = false; update(); }); }
