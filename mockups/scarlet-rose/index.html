@@ -1,5 +1,9 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Scarlet Rose Salon</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Jost:wght@300;400;500&display=swap">
@@ -55,8 +59,10 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 /* hero */
 .hero-track { position: relative; height: 230svh; margin-top: calc(-1 * var(--nav-h)); }
 .hero { --lift: .14; background: var(--ink); color: #f4eadf; position: sticky; top: 0; overflow: hidden; height: 100svh; height: 100dvh; display: flex; align-items: center; justify-content: center; text-align: center; }
-.hero .ph { position: absolute; inset: 0; background: radial-gradient(45% 55% at 72% 38%, rgba(201,128,98,.65) 0%, rgba(201,128,98,0) 70%), radial-gradient(40% 50% at 18% 75%, #4a0c18 0%, rgba(74,12,24,0) 75%), linear-gradient(160deg, #1a0a0d 0%, #2d0e16 60%, #12080a 100%); }
-.hero .ph::after { left: auto; right: max(16px, env(safe-area-inset-right, 0px)); bottom: 14px; text-align: right; }
+.hero .ph { position: absolute; inset: 0; background: #2a1014; }
+.hero .ph img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 42%; filter: brightness(.86) saturate(1.05); }
+.hero .ph::before { content: ""; position: absolute; inset: 0; z-index: 1; background: radial-gradient(75% 40% at 50% 50%, rgba(26,6,11,.55) 0%, rgba(26,6,11,.18) 100%), linear-gradient(180deg, rgba(26,6,11,.32) 0%, rgba(26,6,11,.05) 35%, rgba(26,6,11,.3) 100%); }
+.hero .ph::after { content: none; }
 .veil { position: absolute; inset: 0; z-index: 1; pointer-events: none; transform: translate3d(0, calc(var(--lift) * (-100% - 30px)), 0); will-change: transform; background: linear-gradient(115deg, rgba(255,255,255,0) 28%, rgba(255,255,255,.2) 44%, rgba(255,255,255,0) 60%), repeating-linear-gradient(94deg, rgba(255,255,255,0) 0, rgba(255,255,255,.09) 38px, rgba(255,255,255,0) 91px, rgba(0,0,0,.07) 133px, rgba(255,255,255,0) 173px), repeating-linear-gradient(101deg, rgba(255,255,255,0) 0, rgba(255,255,255,.07) 61px, rgba(0,0,0,.05) 112px, rgba(255,255,255,0) 241px), linear-gradient(180deg, rgba(200,16,46,.46) 0%, rgba(214,30,58,.36) 60%, rgba(200,16,46,.52) 100%); -webkit-backdrop-filter: blur(calc((1 - var(--lift)) * 3px)) saturate(1.15); backdrop-filter: blur(calc((1 - var(--lift)) * 3px)) saturate(1.15); box-shadow: 0 1px 0 rgba(226,191,122,.9), 0 10px 24px rgba(0,0,0,.22); }
 .veil::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 12px; margin-top: 2px; background: radial-gradient(circle at 10px 0, #e2bf7a 8px, rgba(226,191,122,0) 8.6px) 0 0 / 20px 12px repeat-x; }
 .hero::before { content: ""; position: absolute; inset: 0 0 auto; height: 160px; z-index: 3; pointer-events: none; background: linear-gradient(180deg, rgba(14,11,11,.3), rgba(14,11,11,0)); }
@@ -135,6 +141,7 @@ form { background: var(--paper); padding: clamp(20px, 3vw, 36px); display: grid;
 .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 label { display: grid; gap: 6px; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; font-weight: 500; min-width: 0; }
 input, select, textarea { font: inherit; font-size: 15px; letter-spacing: 0; text-transform: none; font-weight: 300; padding: 11px 12px; border: 1px solid #d9c9c9; background: var(--paper); color: var(--ink); border-radius: 0; width: 100%; }
+[hidden] { display: none !important; }
 .thanks { color: var(--scarlet-deep); font-size: 14px; margin: 0; }
 
 footer { background: var(--ink); color: #cdbfbf; padding-block: 36px; font-size: 13px; }
@@ -153,6 +160,9 @@ footer .mark { font-family: var(--display); font-style: italic; color: var(--pap
   .btn { transition: background .2s, color .2s; }
 }
 </style>
+</head>
+<body>
+
 
 <header class="nav" id="nav">
   <div class="wrap">
@@ -170,7 +180,7 @@ footer .mark { font-family: var(--display); font-style: italic; color: var(--pap
 
 <div class="hero-track" id="heroTrack">
 <section class="hero" id="top">
-  <div class="ph" data-label="Photo: full-bleed bridal close-up" aria-hidden="true"></div>
+  <div class="ph" aria-hidden="true"><img src="hero.jpg" alt="" width="1920" height="1080" fetchpriority="high"></div>
   <div class="veil" aria-hidden="true"></div>
   <div class="wrap">
     <h1>scarlet rose</h1>
@@ -343,3 +353,6 @@ document.getElementById('book').addEventListener('submit', function (e) {
   document.getElementById('thanks').hidden = false;
 });
 </script>
+
+</body>
+</html>
