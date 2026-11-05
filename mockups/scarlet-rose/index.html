@@ -54,15 +54,15 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .hero { background: var(--ink); color: var(--paper); position: relative; overflow: hidden; }
 .hero .ph { position: absolute; inset: 0; opacity: .9; }
 .hero .ph::after { content: none; }
-.hero::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgba(14,11,11,.35) 0%, rgba(14,11,11,.1) 40%, rgba(14,11,11,.75) 100%); }
-.hero { min-height: calc(100svh - 56px); min-height: calc(100dvh - 56px); display: flex; align-items: flex-end; }
-.hero .wrap { position: relative; z-index: 2; width: 100%; padding-block: clamp(40px, 9svh, 120px) clamp(32px, 7svh, 72px); }
-.hero h1 { font-family: var(--display); font-weight: 400; font-size: clamp(56px, min(15vw, 26svh), 200px); line-height: .92; letter-spacing: -.02em; margin: 0; text-transform: lowercase; text-wrap: balance; }
+.hero::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgba(14,11,11,.4) 0%, rgba(14,11,11,.6) 45%, rgba(14,11,11,.85) 100%); }
+.hero { min-height: calc(100svh - 56px); min-height: calc(100dvh - 56px); display: flex; align-items: center; }
+.hero .wrap { position: relative; z-index: 2; width: 100%; padding-block: clamp(32px, 6svh, 72px); }
+.hero h1 { font-family: var(--display); font-weight: 400; font-size: clamp(56px, min(16vw, 30svh), 220px); line-height: .92; letter-spacing: -.02em; margin: 0; text-transform: lowercase; text-wrap: balance; }
 .hero h1 em { font-style: italic; color: #ffd9dd; }
-.hero .rule { display: flex; align-items: center; gap: 18px; margin-top: clamp(14px, 3svh, 34px); }
-.hero .rule::before { content: ""; flex: 1; max-width: 340px; height: 1px; background: rgba(255,255,255,.7); }
-.hero .rule span { white-space: nowrap; }
-.hero .cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: clamp(14px, 3svh, 30px); }
+.hero .lede { font-size: clamp(17px, 2.2vw, 24px); font-weight: 400; line-height: 1.4; max-width: 30ch; margin: clamp(12px, 2.2svh, 22px) 0 0; color: var(--paper); text-wrap: balance; }
+.hero .cta { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 28px; margin-top: clamp(18px, 3.2svh, 32px); }
+.textlink { font-size: 11px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; padding-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,.6); }
+.textlink:hover { color: #ff6b81; border-color: #ff6b81; }
 
 /* intro on scarlet */
 .intro { background: var(--scarlet); color: var(--paper); padding-block: clamp(40px, 8svh, 100px); }
@@ -167,10 +167,10 @@ footer .mark { font-family: var(--display); font-style: italic; color: var(--pap
   <div class="ph a" aria-hidden="true"></div>
   <div class="wrap">
     <h1>scarlet <em>rose</em></h1>
-    <div class="rule eyebrow"><span>Hair &amp; beauty salon &nbsp;|&nbsp; Bridal artist &nbsp;|&nbsp; Aloe Park</span></div>
+    <p class="lede">Luxury hair, beauty and bridal artistry in Aloe Park.</p>
     <div class="cta">
       <a class="btn solid" href="#visit">Book an appointment</a>
-      <a class="btn line" href="#bridal">Bridal bookings</a>
+      <a class="textlink" href="#bridal">Bridal bookings <span aria-hidden="true">&rarr;</span></a>
     </div>
   </div>
 </section>
