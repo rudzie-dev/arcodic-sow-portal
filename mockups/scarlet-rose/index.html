@@ -41,6 +41,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .ph.e { background: radial-gradient(100% 100% at 20% 80%, #ffb8a8 0%, #d4283f 40%, #170c0e 100%); }
 .ph.f { background: linear-gradient(200deg, #f6ecec 0%, #d9a9a9 55%, #6b1624 100%); }
 .ph.f::after { color: rgba(14,11,11,.65); }
+.ph.photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: var(--pos, 50% 50%); transform: scale(var(--zoom, 1)); transform-origin: var(--origin, 50% 50%); }
+.ph.photo::before { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 45%; z-index: 1; background: linear-gradient(180deg, rgba(14,11,11,0), rgba(14,11,11,.55)); }
+.ph.photo::after { z-index: 2; color: rgba(255,255,255,.92); }
 
 /* nav */
 .nav { background: transparent; color: #f4eadf; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; height: var(--nav-h); transition: background .25s, transform .5s cubic-bezier(.4, 0, .2, 1); }
@@ -250,7 +253,7 @@ footer .mark { font-family: var(--body); font-weight: 300; text-transform: lower
       <a class="btn solid" href="#visit">Reserve your date</a>
     </div>
     <div class="pair">
-      <div class="ph e" data-label="Photo: bride, red and gold"></div>
+      <div class="ph photo" data-label="Bridal"><img src="bride.jpg" alt="Bride in a teal embroidered lehenga with pink kundan jewellery, hair styled in a loose updo" loading="lazy" style="--pos:60% 22%; --zoom:1; --origin:50% 50%"></div>
       <div class="ph d" data-label="Photo: veil draping"></div>
       <div class="ph c" data-label="Photo: bridal party morning"></div>
     </div>
@@ -260,11 +263,11 @@ footer .mark { font-family: var(--body); font-weight: 300; text-transform: lower
 <section class="work" id="work">
   <div class="wrap">
     <div class="collage">
-      <div class="ph a" data-label="Bridal"></div>
+      <div class="ph photo" data-label="Bridal"><img src="bride.jpg" alt="Embroidered teal outfit with a pink and gold kundan choker" loading="lazy" style="--pos:50% 78%; --zoom:1.1; --origin:50% 75%"></div>
       <div class="ph d" data-label="Balayage"></div>
-      <div class="ph c" data-label="Upstyle"></div>
+      <div class="ph photo" data-label="Upstyle"><img src="bride.jpg" alt="Loose updo with curls and a pink maang tikka" loading="lazy" style="--pos:50% 8%; --zoom:1; --origin:50% 50%"></div>
       <div class="ph f" data-label="Colour"></div>
-      <div class="ph b" data-label="Bridal make up"></div>
+      <div class="ph photo" data-label="Bridal make up"><img src="bride.jpg" alt="Bridal eye make up with winged liner and pink shadow" loading="lazy" style="--pos:62% 33%; --zoom:2.3; --origin:62% 33%"></div>
       <div class="ph e" data-label="Curls"></div>
       <div class="ph f" data-label="Keratin"></div>
     </div>
