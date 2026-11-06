@@ -20,6 +20,9 @@
   --display: "DM Serif Display", "Didot", "Times New Roman", serif;
   --body: "Jost", "Helvetica Neue", Arial, sans-serif;
   --nav-h: 70px;
+  --pad: clamp(40px, 8svh, 100px);
+  --lap: clamp(70px, 14svh, 150px);
+  --lap-off: calc(var(--lap) * 1.4);
   color-scheme: light;
 }
 * { box-sizing: border-box; }
@@ -85,7 +88,10 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   .hero .wrap { animation: rise 1.2s ease-out both; }
   @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 }
-.intro { background: var(--scarlet); color: var(--paper); padding-block: clamp(40px, 8svh, 100px); }
+.lap-up { position: relative; z-index: 3; }
+.intro .lap-up { margin-top: calc(-1 * (var(--pad) + var(--lap))); }
+.intro .tall { box-shadow: 0 34px 60px -20px rgba(14,11,11,.6); }
+.intro { background: var(--scarlet); color: var(--paper); padding-block: var(--pad); }
 .intro .grid { display: grid; grid-template-columns: 5fr 7fr; gap: clamp(28px, 6vw, 80px); align-items: start; }
 .intro .tall { aspect-ratio: 3/4; max-width: min(340px, 46svh); width: 100%; }
 .intro .tall + p { margin: 14px 0 0; }
@@ -99,7 +105,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .stats span { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; }
 
 /* services */
-.services { padding-block: clamp(40px, 8svh, 100px); }
+.services { padding-block: var(--pad); }
 .sec-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 40px; margin-bottom: clamp(18px, 4svh, 36px); }
 .sec-head h2 { font-family: var(--display); font-weight: 400; font-size: clamp(40px, min(7vw, 12svh), 88px); line-height: 1; letter-spacing: -.02em; margin: 0; text-transform: lowercase; }
 .sec-head h2 em { color: var(--scarlet); }
@@ -110,7 +116,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .svc span { font-size: 12px; color: var(--muted); text-align: right; }
 
 /* bridal */
-.bridal { background: var(--ink); color: var(--paper); padding-block: clamp(40px, 8svh, 100px); }
+.bridal { background: var(--ink); color: var(--paper); padding-block: var(--pad); padding-bottom: calc(var(--pad) + var(--lap)); }
 .bridal .grid { display: grid; grid-template-columns: 6fr 5fr; gap: clamp(28px, 6vw, 80px); align-items: center; }
 .bridal .eyebrow { color: #ff6b81; }
 .bridal h2 { font-family: var(--display); font-weight: 400; font-size: clamp(38px, min(6.5vw, 12svh), 84px); line-height: 1; letter-spacing: -.02em; margin: 12px 0 clamp(12px, 2.5svh, 22px); text-transform: lowercase; }
@@ -126,9 +132,9 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .pair .ph:nth-child(3) { height: clamp(90px, 18svh, 200px); grid-column: 1 / -1; }
 
 /* our work */
-.work { min-height: 100vh; min-height: 100svh; display: flex; align-items: center; scroll-margin-top: 0; padding-block: clamp(24px, 5svh, 64px); text-align: center; }
+.work { min-height: calc(100vh - var(--lap-off)); min-height: calc(100svh - var(--lap-off)); display: flex; align-items: flex-start; scroll-margin-top: var(--lap-off); padding-block: 0 clamp(16px, 3svh, 32px); text-align: center; }
 .work .wrap { width: 100%; }
-.collage { display: grid; grid-template-columns: repeat(12, 1fr); grid-auto-rows: clamp(24px, 6svh, 62px); gap: clamp(6px, 1.2svh, 10px); text-align: left; }
+.collage { position: relative; z-index: 3; margin-top: calc(-1 * var(--lap)); box-shadow: 0 0 0 transparent; display: grid; grid-template-columns: repeat(12, 1fr); grid-auto-rows: clamp(24px, 6svh, 62px); gap: clamp(6px, 1.2svh, 10px); text-align: left; }
 .collage .ph:nth-child(1) { grid-column: 1 / 5; grid-row: 1 / 6; }
 .collage .ph:nth-child(2) { grid-column: 5 / 8; grid-row: 2 / 6; }
 .collage .ph:nth-child(3) { grid-column: 8 / 13; grid-row: 1 / 4; }
@@ -141,25 +147,31 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .work .sub { max-width: 52ch; margin: 0 auto; color: var(--muted); font-size: 14px; }
 
 /* visit */
-.visit { background: var(--blush); padding-block: clamp(40px, 8svh, 100px); }
+.visit { background: var(--blush); padding-block: var(--pad); }
 .visit .grid { display: grid; grid-template-columns: 5fr 6fr; gap: clamp(28px, 6vw, 80px); }
 .visit h2 { font-family: var(--display); font-weight: 400; font-size: clamp(36px, 5vw, 64px); line-height: 1.02; margin: 0 0 18px; text-transform: lowercase; }
 .visit dl { margin: 22px 0 0; display: grid; gap: 14px; font-size: 15px; }
 .visit dt { font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--scarlet); font-weight: 500; }
 .visit dd { margin: 2px 0 0; }
-form { background: var(--paper); padding: clamp(20px, 3vw, 36px); display: grid; gap: 16px; border-top: 4px solid var(--scarlet); }
+form { position: relative; z-index: 3; margin-bottom: calc(-1 * (var(--pad) + var(--lap) * .8)); box-shadow: 0 40px 70px -24px rgba(14,11,11,.5); background: var(--paper); padding: clamp(20px, 3vw, 36px); display: grid; gap: 16px; border-top: 4px solid var(--scarlet); }
 .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 label { display: grid; gap: 6px; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; font-weight: 500; min-width: 0; }
 input, select, textarea { font: inherit; font-size: 15px; letter-spacing: 0; text-transform: none; font-weight: 300; padding: 11px 12px; border: 1px solid #d9c9c9; background: var(--paper); color: var(--ink); border-radius: 0; width: 100%; }
 [hidden] { display: none !important; }
 .thanks { color: var(--scarlet-deep); font-size: 14px; margin: 0; }
 
-footer { background: var(--ink); color: #cdbfbf; padding-block: 36px; font-size: 13px; }
+footer { background: var(--ink); color: #cdbfbf; padding-block: calc(var(--lap) * .8 + 36px) 36px; font-size: 13px; }
 footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 30px; }
 footer .mark { font-family: var(--body); font-weight: 300; text-transform: lowercase; letter-spacing: -.03em; color: var(--paper); font-size: 24px; }
 
+@media (min-width: 821px) {
+  .services { padding-bottom: calc(var(--pad) + var(--lap)); }
+  .bridal { padding-bottom: calc(var(--pad) + var(--lap)); }
+  .pair .ph:nth-child(1) { margin-top: calc(-1 * (var(--pad) + var(--lap))); position: relative; z-index: 3; box-shadow: 0 34px 60px -20px rgba(0,0,0,.6); }
+}
 @media (max-width: 820px) {
   .nav ul { display: none; }
+  .intro .tall { max-width: min(250px, 64vw); }
   .intro .grid, .bridal .grid, .visit .grid { grid-template-columns: 1fr; }
   .svc { grid-template-columns: 1fr; }
   .collage { grid-auto-rows: clamp(24px, 5svh, 44px); gap: 8px; }
@@ -201,7 +213,7 @@ footer .mark { font-family: var(--body); font-weight: 300; text-transform: lower
 
 <section class="intro" id="about">
   <div class="wrap grid">
-    <div>
+    <div class="lap-up">
       <div class="ph b tall" data-label="Finished bridal updo" data-note="A bridal updo from behind, pins and fresh flowers in sharp focus"></div>
       <p class="small-cap">Where tradition meets craft<br>and every detail is done right.</p>
     </div>
@@ -330,6 +342,10 @@ var nav = document.getElementById('nav');
 var hero = document.getElementById('top');
 var wordmark = hero.querySelector('h1');
 var work = document.getElementById('work');
+var probe = document.createElement('div');
+probe.style.cssText = 'position:absolute;visibility:hidden;width:0;height:var(--lap-off)';
+document.body.appendChild(probe);
+function lapOff() { return probe.offsetHeight; }
 var ticking = false, lastY = window.scrollY, hideNav = false, peek = false, focused = false, wasInWork = false, dirDown = true, snapTimer = null;
 function applyNav() { nav.classList.toggle('hidden', hideNav && !peek && !focused); }
 function update() {
@@ -338,7 +354,7 @@ function update() {
   nav.classList.toggle('show-mark', past);
   // Immersive "our work": tuck the bar away while the section fills the screen.
   var wr = work.getBoundingClientRect();
-  var inWork = wr.top <= 40 && wr.bottom > window.innerHeight * 0.6;
+  var inWork = wr.top <= lapOff() + 40 && wr.bottom > window.innerHeight * 0.6;
   var dy = window.scrollY - lastY;
   lastY = window.scrollY;
   if (dy !== 0) dirDown = dy > 0;
@@ -355,8 +371,9 @@ function update() {
 // the visitor was already going, so the section lands filling the screen. Never pulls back.
 function settleWork() {
   var wr = work.getBoundingClientRect(), vh = window.innerHeight, delta = 0;
-  if (dirDown && wr.top > 8 && wr.top < vh * 0.55) delta = wr.top;
-  else if (!dirDown && wr.top < -8 && wr.top > -vh * 0.55) delta = wr.top;
+  var d = wr.top - lapOff();
+  if (dirDown && d > 8 && d < vh * 0.55) delta = d;
+  else if (!dirDown && d < -8 && d > -vh * 0.55) delta = d;
   if (delta) window.scrollBy({ top: delta, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 }
 window.addEventListener('scroll', function () {
