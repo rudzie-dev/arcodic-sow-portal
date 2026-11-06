@@ -6,7 +6,7 @@
 <title>Scarlet Rose Salon</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Jost:wght@300;400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&display=swap">
 <style>
 /* Layout: editorial scroll like the reference. Black hero with a giant lowercase wordmark, a full-bleed scarlet block in place of the olive one, a ragged photo collage, then a huge "our work" heading. Photos are labelled placeholders to swap for the salon's own work. */
 :root {
@@ -17,7 +17,7 @@
   --paper: #ffffff;
   --blush: #f6ecec;
   --muted: #8a7a7b;
-  --display: "DM Serif Display", "Didot", "Times New Roman", serif;
+  --display: "Jost", "Helvetica Neue", Arial, sans-serif;
   --body: "Jost", "Helvetica Neue", Arial, sans-serif;
   --nav-h: 70px;
   color-scheme: light;
@@ -91,17 +91,18 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .intro .tall + p { margin: 14px 0 0; }
 .intro .small-cap { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; }
 .intro .wide { aspect-ratio: 16/7; max-height: 34svh; width: 100%; }
-.intro h2 { font-family: var(--display); font-weight: 400; font-size: clamp(26px, 3.6vw, 44px); line-height: 1.15; margin: clamp(16px, 3svh, 28px) 0 12px; text-wrap: balance; }
+.intro h2 { font-family: var(--display); font-weight: 300; font-size: clamp(26px, 3.6vw, 44px); line-height: 1.15; letter-spacing: -.02em; margin: clamp(16px, 3svh, 28px) 0 12px; text-wrap: balance; }
 .intro p { max-width: 54ch; margin: 0 0 14px; font-size: 15px; }
 .stats { display: flex; flex-wrap: wrap; gap: 14px 40px; margin-top: 26px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,.4); }
 .stats div { min-width: 0; }
-.stats b { display: block; font-family: var(--display); font-weight: 400; font-size: 40px; line-height: 1; font-variant-numeric: tabular-nums; }
+.stats b { display: block; font-family: var(--display); font-weight: 300; font-size: 44px; line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
 .stats span { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; }
 
 /* services */
 .services { padding-block: clamp(40px, 8svh, 100px); }
 .sec-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 40px; margin-bottom: clamp(18px, 4svh, 36px); }
-.sec-head h2 { font-family: var(--display); font-weight: 400; font-size: clamp(40px, min(7vw, 12svh), 88px); line-height: 1; letter-spacing: -.02em; margin: 0; text-transform: lowercase; }
+.sec-head h2 { font-family: var(--display); font-weight: 300; font-size: clamp(40px, min(7vw, 12svh), 88px); line-height: 1; letter-spacing: -.02em; margin: 0; text-transform: lowercase; }
+.sec-head h2 em, .bridal h2 em, .big em { font-style: normal; }
 .sec-head h2 em { color: var(--scarlet); }
 .sec-head p { max-width: 38ch; margin: 0; color: var(--muted); font-size: 14px; }
 .svc { display: grid; grid-template-columns: repeat(2, 1fr); column-gap: clamp(24px, 6vw, 80px); }
@@ -113,7 +114,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .bridal { background: var(--ink); color: var(--paper); padding-block: clamp(40px, 8svh, 100px); }
 .bridal .grid { display: grid; grid-template-columns: 6fr 5fr; gap: clamp(28px, 6vw, 80px); align-items: center; }
 .bridal .eyebrow { color: #ff6b81; }
-.bridal h2 { font-family: var(--display); font-weight: 400; font-size: clamp(38px, min(6.5vw, 12svh), 84px); line-height: 1; letter-spacing: -.02em; margin: 12px 0 clamp(12px, 2.5svh, 22px); text-transform: lowercase; }
+.bridal h2 { font-family: var(--display); font-weight: 300; font-size: clamp(38px, min(6.5vw, 12svh), 84px); line-height: 1; letter-spacing: -.02em; margin: 12px 0 clamp(12px, 2.5svh, 22px); text-transform: lowercase; }
 .bridal h2 em { color: #ff6b81; }
 .bridal p { max-width: 48ch; color: #d8cccc; }
 .bridal ul { list-style: none; margin: 22px 0 28px; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px; font-size: 14px; }
@@ -136,14 +137,14 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .collage .ph:nth-child(5) { grid-column: 10 / 13; grid-row: 4 / 8; }
 .collage .ph:nth-child(6) { grid-column: 2 / 5; grid-row: 6 / 9; }
 .collage .ph:nth-child(7) { grid-column: 5 / 8; grid-row: 6 / 9; }
-.big { font-family: var(--display); font-weight: 400; font-size: clamp(56px, min(17vw, 19svh), 220px); line-height: .9; letter-spacing: -.03em; margin: clamp(14px, 3svh, 40px) 0 8px; text-transform: lowercase; }
+.big { font-family: var(--display); font-weight: 300; font-size: clamp(56px, min(17vw, 19svh), 220px); line-height: .9; letter-spacing: -.03em; margin: clamp(14px, 3svh, 40px) 0 8px; text-transform: lowercase; }
 .big em { color: var(--scarlet); }
 .work .sub { max-width: 52ch; margin: 0 auto; color: var(--muted); font-size: 14px; }
 
 /* visit */
 .visit { background: var(--blush); padding-block: clamp(40px, 8svh, 100px); }
 .visit .grid { display: grid; grid-template-columns: 5fr 6fr; gap: clamp(28px, 6vw, 80px); }
-.visit h2 { font-family: var(--display); font-weight: 400; font-size: clamp(36px, 5vw, 64px); line-height: 1.02; margin: 0 0 18px; text-transform: lowercase; }
+.visit h2 { font-family: var(--display); font-weight: 300; font-size: clamp(36px, 5vw, 64px); line-height: 1.02; letter-spacing: -.03em; margin: 0 0 18px; text-transform: lowercase; }
 .visit dl { margin: 22px 0 0; display: grid; gap: 14px; font-size: 15px; }
 .visit dt { font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--scarlet); font-weight: 500; }
 .visit dd { margin: 2px 0 0; }
