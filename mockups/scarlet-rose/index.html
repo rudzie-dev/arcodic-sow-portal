@@ -38,7 +38,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .ph.c { background: linear-gradient(160deg, #1c1516 0%, #5a0d1b 60%, #c8102e 100%); }
 .ph.d { background: radial-gradient(90% 80% at 50% 25%, #fff 0%, #e9cfcf 40%, #9a6a6c 100%); }
 .ph.d::after { color: rgba(14,11,11,.65); }
-.ph.e { background: radial-gradient(100% 100% at 20% 80%, #ffb8a8 0%, #d4283f 40%, #170c0e 100%); }
+.ph.e { background: radial-gradient(100% 100% at 80% 20%, #ffb8a8 0%, #d4283f 40%, #170c0e 100%); }
 .ph.f { background: linear-gradient(200deg, #f6ecec 0%, #d9a9a9 55%, #6b1624 100%); }
 .ph.f::after { color: rgba(14,11,11,.65); }
 .ph[data-note]:not(.photo)::before { content: "Photo slot"; position: absolute; top: 10px; left: 10px; z-index: 1; font-size: 9px; letter-spacing: .2em; text-transform: uppercase; padding: 3px 7px; border: 1px solid currentColor; color: rgba(255,255,255,.85); }
@@ -275,16 +275,16 @@ footer .mark { font-family: var(--body); font-weight: 300; text-transform: lower
 <section class="work" id="work">
   <div class="wrap">
     <div class="collage">
-      <div class="ph photo" data-label="Bridal"><img src="bride.jpg" alt="Embroidered teal outfit with a pink and gold kundan choker" loading="lazy" style="--pos:50% 78%; --zoom:1.1; --origin:50% 75%"></div>
+      <div class="ph a" data-label="Bridal" data-note="A full-length bridal portrait in the finished look, outfit and jewellery in frame"></div>
       <div class="ph photo" data-label="Balayage"><img src="balayage.jpg" alt="Caramel balayage on shoulder-length waves" loading="lazy" style="--pos:50% 55%; --zoom:1.25; --origin:50% 55%"></div>
-      <div class="ph photo" data-label="Upstyle"><img src="bride.jpg" alt="Loose updo with curls and a pink maang tikka" loading="lazy" style="--pos:50% 8%; --zoom:1; --origin:50% 50%"></div>
+      <div class="ph c" data-label="Upstyle" data-note="A finished upstyle from behind or the side, accessories in sharp focus"></div>
       <div class="ph photo" data-label="Colour"><img src="color-curls.jpg" alt="Dark hair with caramel highlights" loading="lazy" style="--pos:40% 20%; --zoom:1.5; --origin:42% 22%"></div>
-      <div class="ph photo" data-label="Bridal make up"><img src="bride.jpg" alt="Bridal eye make up with winged liner and pink shadow" loading="lazy" style="--pos:62% 33%; --zoom:2.3; --origin:62% 33%"></div>
-      <div class="ph photo" data-label="Curls"><img src="color-curls.jpg" alt="Long bouncy curls styled with volume" loading="lazy" style="--pos:45% 75%; --zoom:1.4; --origin:45% 72%"></div>
+      <div class="ph b" data-label="Bridal make up" data-note="A close-up of eyes and lips with the make up in natural light"></div>
+      <div class="ph e" data-label="Curls" data-note="Long curls styled with volume, shot from behind in daylight"></div>
       <div class="ph photo" data-label="Keratin"><img src="keratin.jpg" alt="Smooth, straight blonde finish after a keratin treatment" loading="lazy" style="--pos:50% 45%; --zoom:1.05; --origin:50% 45%"></div>
     </div>
     <h2 class="big">our <em>work</em></h2>
-    <p class="sub">Real brides and real clients, from the salon floor.</p>
+    <p class="sub">Real brides and real clients, from the salon floor. Tiles without a photo show where more of the gallery goes.</p>
   </div>
 </section>
 
