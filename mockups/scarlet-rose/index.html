@@ -41,6 +41,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .ph.e { background: radial-gradient(100% 100% at 20% 80%, #ffb8a8 0%, #d4283f 40%, #170c0e 100%); }
 .ph.f { background: linear-gradient(200deg, #f6ecec 0%, #d9a9a9 55%, #6b1624 100%); }
 .ph.f::after { color: rgba(14,11,11,.65); }
+.ph[data-note]:not(.photo)::before { content: "Photo slot"; position: absolute; top: 10px; left: 10px; z-index: 1; font-size: 9px; letter-spacing: .2em; text-transform: uppercase; padding: 3px 7px; border: 1px solid currentColor; color: rgba(255,255,255,.85); }
+.ph[data-note]:not(.photo)::after { content: attr(data-label) "\A" attr(data-note); white-space: pre-line; text-transform: none; letter-spacing: .02em; font-size: 11px; line-height: 1.45; left: 12px; right: 12px; bottom: 12px; }
+.ph.d[data-note]:not(.photo)::before, .ph.f[data-note]:not(.photo)::before { color: rgba(14,11,11,.7); }
 .ph.photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: var(--pos, 50% 50%); transform: scale(var(--zoom, 1)); transform-origin: var(--origin, 50% 50%); }
 .ph.photo::before { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 45%; z-index: 1; background: linear-gradient(180deg, rgba(14,11,11,0), rgba(14,11,11,.55)); }
 .ph.photo::after { z-index: 2; color: rgba(255,255,255,.92); }
@@ -160,6 +163,8 @@ footer .mark { font-family: var(--body); font-weight: 300; text-transform: lower
   .intro .grid, .bridal .grid, .visit .grid { grid-template-columns: 1fr; }
   .svc { grid-template-columns: 1fr; }
   .collage { grid-auto-rows: clamp(24px, 5svh, 44px); gap: 8px; }
+  .collage .ph[data-note]:not(.photo)::before { display: none; }
+  .collage .ph[data-note]:not(.photo)::after { content: attr(data-label); text-transform: uppercase; letter-spacing: .16em; font-size: 10px; }
   .row { grid-template-columns: 1fr; }
   .bridal ul { grid-template-columns: 1fr; }
 }
@@ -197,11 +202,11 @@ footer .mark { font-family: var(--body); font-weight: 300; text-transform: lower
 <section class="intro" id="about">
   <div class="wrap grid">
     <div>
-      <div class="ph b tall" data-label="Photo: finished bridal updo"></div>
+      <div class="ph b tall" data-label="Finished bridal updo" data-note="A bridal updo from behind, pins and fresh flowers in sharp focus"></div>
       <p class="small-cap">Where tradition meets craft<br>and every detail is done right.</p>
     </div>
     <div>
-      <div class="ph c wide" data-label="Photo: salon interior or stylist at work"></div>
+      <div class="ph c wide" data-label="The salon floor" data-note="A wide, bright shot of the salon with a stylist at work, ideally with the aloe plants in view"></div>
       <h2>A fully fledged professional salon, 24 years in the making.</h2>
       <p>Tucked among the wagon hill and lush aloe plants of Aloe Park, Scarlet Rose has styled hair for everyday and for the biggest day of the year. From a kids' cut to a full bridal look, the same hands and the same standards.</p>
       <p>We work by appointment, so your time in the chair is yours.</p>
@@ -254,8 +259,8 @@ footer .mark { font-family: var(--body); font-weight: 300; text-transform: lower
     </div>
     <div class="pair">
       <div class="ph photo" data-label="Bridal"><img src="bride.jpg" alt="Bride in a teal embroidered lehenga with pink kundan jewellery, hair styled in a loose updo" loading="lazy" style="--pos:60% 22%; --zoom:1; --origin:50% 50%"></div>
-      <div class="ph d" data-label="Photo: veil draping"></div>
-      <div class="ph c" data-label="Photo: bridal party morning"></div>
+      <div class="ph d" data-label="Veil draping" data-note="The veil being set on a bride, the gold border catching the light"></div>
+      <div class="ph c" data-label="Wedding morning" data-note="Bride and bridesmaids getting ready together, the busiest and happiest hour of the day"></div>
     </div>
   </div>
 </section>
@@ -269,10 +274,10 @@ footer .mark { font-family: var(--body); font-weight: 300; text-transform: lower
       <div class="ph photo" data-label="Colour"><img src="color-curls.jpg" alt="Dark hair with caramel highlights" loading="lazy" style="--pos:40% 20%; --zoom:1.5; --origin:42% 22%"></div>
       <div class="ph photo" data-label="Bridal make up"><img src="bride.jpg" alt="Bridal eye make up with winged liner and pink shadow" loading="lazy" style="--pos:62% 33%; --zoom:2.3; --origin:62% 33%"></div>
       <div class="ph photo" data-label="Curls"><img src="color-curls.jpg" alt="Long bouncy curls styled with volume" loading="lazy" style="--pos:45% 75%; --zoom:1.4; --origin:45% 72%"></div>
-      <div class="ph f" data-label="Keratin"></div>
+      <div class="ph f" data-label="Keratin" data-note="Before and after of a smooth, frizz-free finish in daylight"></div>
     </div>
     <h2 class="big">our <em>work</em></h2>
-    <p class="sub">Real brides and real clients, from the salon floor. Swap these tiles for photos from the salon's own gallery.</p>
+    <p class="sub">Real brides and real clients, from the salon floor. Tiles without a photo show where more of the gallery goes.</p>
   </div>
 </section>
 
